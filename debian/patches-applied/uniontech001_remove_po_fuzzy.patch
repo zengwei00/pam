@@ -1,0 +1,38 @@
+From: ut001335 <lichangze@uniontech.com>
+Subject: remove #fuzzy in zh_CN.po
+
+Some msgstr with #fuzzy entry can not be used,such as "Current %s%spassword: ".
+If msgid marks #fuzzy, msgfmt will ignore this msgid. So we can delete the #fuzzy
+tag manually or using poedit if we are sure that the translation is correct.
+
+Bug: Can't get the correct translation from pam's mo file
+Last-Update: 2020-10-27
+
+diff --git a/po/zh_CN.po b/po/zh_CN.po
+index b7d2c832..fddcda89 100644
+--- a/po/zh_CN.po
++++ b/po/zh_CN.po
+@@ -44,7 +44,7 @@ msgid "Password: "
+ msgstr "密码："
+ 
+ #: libpam/pam_get_authtok.c:41
+-#, fuzzy, c-format
++#, c-format
+ msgid "Current %s password: "
+ msgstr "新的 %s 密码："
+ 
+@@ -550,14 +550,12 @@ msgid "Your account has expired; please contact your system administrator."
+ msgstr "您的帐户已失效；请与系统管理员取得联系"
+ 
+ #: modules/pam_unix/pam_unix_acct.c:238
+-#, fuzzy
+ msgid ""
+ "You are required to change your password immediately (administrator "
+ "enforced)."
+ msgstr "您需要立即更改密码（root 强制）"
+ 
+ #: modules/pam_unix/pam_unix_acct.c:244
+-#, fuzzy
+ msgid ""
+ "You are required to change your password immediately (password expired)."
+ msgstr "您需要立即更改密码（密码过期）"

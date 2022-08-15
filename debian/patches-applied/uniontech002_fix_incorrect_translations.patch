@@ -1,0 +1,26 @@
+From: zsien <i@zsien.cn>
+Date: Tue, 1 Dec 2020 13:42:19 +0800
+Subject: fix incorrect translations
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+diff --git a/po/zh_CN.po b/po/zh_CN.po
+index b7d2c832..44779b21 100644
+--- a/po/zh_CN.po
++++ b/po/zh_CN.po
+@@ -46,12 +46,12 @@ msgstr "密码："
+ #: libpam/pam_get_authtok.c:41
+ #, fuzzy, c-format
+ msgid "Current %s password: "
+-msgstr "新的 %s 密码："
++msgstr "当前的 %s 密码："
+ 
+ #: libpam/pam_get_authtok.c:42
+ #, fuzzy
+ msgid "Current password: "
+-msgstr "新的 密码："
++msgstr "当前的 密码："
+ 
+ #: libpam/pam_get_authtok.c:44
+ #, c-format

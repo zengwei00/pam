@@ -1,0 +1,46 @@
+From 8274d8580287a612953712bd21db1db54989c80f Mon Sep 17 00:00:00 2001
+From: liaohanqin <liaohanqin@uniontech.com>
+Date: Thu, 25 Nov 2021 15:48:13 +0800
+Subject: [PATCH] =?UTF-8?q?feat:=20=E5=A2=9E=E5=8A=A0=E4=BD=BF=E7=94=A8?=
+ =?UTF-8?q?=E7=B3=BB=E7=BB=9F=E9=BB=98=E8=AE=A4=E7=9A=84=E8=AF=AD=E8=A8=80?=
+ =?UTF-8?q?=E7=8E=AF=E5=A2=83?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+由于lightdm无密码登录使用该模块，认证成功直接返回，存在绕过
+uos本地化的，故auth阶段让pam选择本地默认环境
+
+Log: 解决密码过期时，无密码登录文案错误
+Bug: https://pms.uniont
+Influence: 登录文案显示
+Change-Id: Ia6a9daccc8cc4809db49f2b69425fdcec7725b7a
+
+diff --git a/modules/pam_succeed_if/pam_succeed_if.c b/modules/pam_succeed_if/pam_succeed_if.c
+index 7103ae30..c7cbb2ba 100644
+--- a/modules/pam_succeed_if/pam_succeed_if.c
++++ b/modules/pam_succeed_if/pam_succeed_if.c
+@@ -1,3 +1,4 @@
++
+ /******************************************************************************
+  * A simple user-attribute based module for PAM.
+  *
+@@ -52,6 +53,7 @@
+ #include <pwd.h>
+ #include <grp.h>
+ #include <netdb.h>
++#include <locale.h>
+ 
+ #include <security/pam_modules.h>
+ #include <security/pam_modutil.h>
+@@ -463,6 +465,10 @@ pam_sm_authenticate (pam_handle_t *pamh, int flags UNUSED,
+ 	const char *left, *right, *qual;
+ 	int quiet_fail, quiet_succ, audit;
+ 
++
++	/* use default locale */
++	setlocale(LC_ALL, "");
++
+ 	quiet_fail = 0;
+ 	quiet_succ = 0;
+ 	audit = 0;

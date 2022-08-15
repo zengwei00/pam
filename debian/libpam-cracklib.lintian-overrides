@@ -1,0 +1,1 @@
+libpam-cracklib: shlib-without-PT_GNU_STACK-section
