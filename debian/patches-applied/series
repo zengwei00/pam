@@ -32,3 +32,5 @@ pam_env-allow-environment-files-without-EOL-at-EOF.patch
 uniontech001_remove_po_fuzzy.patch
 uniontech002_fix_incorrect_translations.patch
 uniontech003_pam_succeed_if_add_locale.patch
+uniontech004_delete_fuzzy_flag_for_pam_get_auth_token.patch
+
