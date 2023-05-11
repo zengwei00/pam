@@ -1,4 +1,4 @@
-pam (1.4.0-13deepin1) unstable; urgency=medium
+pam (1.4.0-14deepin1) unstable; urgency=medium
 
   * bugfix for translate for "current password: " message.
 
