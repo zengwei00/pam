@@ -1,4 +1,3 @@
-pam_unix_fix_sgid_shadow_auth.patch
 pam_unix_dont_trust_chkpwd_caller.patch
 make_documentation_reproducible.patch
 007_modules_pam_unix
@@ -22,15 +21,4 @@ pam-limits-nofile-fd-setsize-cap
 fix-autoreconf.patch
 nullok_secure-compat.patch
 
-pam_unix_initialize_daysleft
-pam_faillock_create_directory
 pam_mkhomedir_stat_before_opendir
-pam_unix_avoid_checksalt
-
-pam_env-allow-environment-files-without-EOL-at-EOF.patch
-
-uniontech001_remove_po_fuzzy.patch
-uniontech002_fix_incorrect_translations.patch
-uniontech003_pam_succeed_if_add_locale.patch
-uniontech004_delete_fuzzy_flag_for_pam_get_auth_token.patch
-
