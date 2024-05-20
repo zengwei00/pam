@@ -13,31 +13,30 @@ DEB_HOST_MULTIARCH	?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 LC_COLLATE=C
 export LC_COLLATE
 
-export QUILT_PATCH_DIR = debian/patches-applied
 
 d = $(CURDIR)/debian
 dl = $(d)/local
 
 %:
-	dh $@ --with quilt,autoreconf
+	dh $@
 
-# Since this is a 3.0 (quilt) source package, it has a .pc directory pointing
-# to debian/patches after initial unpack.  This misleads quilt and makes
-# dh_quilt_unpatch fail hard.
-execute_before_dh_quilt_unpatch:
-	if test "`cat .pc/.quilt_patches 2>/dev/null`" = debian/patches; then rm -Rf .pc; fi
 
 # avoid libaudit-dev when bootstrapping
 ifneq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
   CONFIGURE_OPTS += --disable-audit
-endif  
+endif
+
+CONFIGURE_OPTS += --enable-logind
 
 override_dh_auto_configure:
+	# Explicitly set libdir, sbindir to avoid upstream's override logic.
 	dh_auto_configure -- --enable-static --enable-shared \
-		--libdir=/lib/$(DEB_HOST_MULTIARCH) \
-		--enable-isadir=/lib/security \
+		--libdir=/usr/lib/$(DEB_HOST_MULTIARCH) \
+		--sbindir=/usr/sbin \
+		--enable-isadir=/usr/lib/security \
 		--with-systemdunitdir=/usr/lib/systemd/system \
 		--disable-nis \
+		--enable-usergroups \
 		$(CONFIGURE_OPTS)
 
 # .install files don't have "except for" handling, so we need to exclude
@@ -72,8 +71,8 @@ override_dh_installman:
 override_dh_fixperms:
 	dh_fixperms
 ifneq (,$(findstring libpam-modules, $(shell dh_listpackages)))
-	chgrp shadow $(d)/libpam-modules-bin/sbin/unix_chkpwd
-	chmod 02755 $(d)/libpam-modules-bin/sbin/unix_chkpwd
+	chgrp shadow $(d)/libpam-modules-bin/usr/sbin/unix_chkpwd
+	chmod 02755 $(d)/libpam-modules-bin/usr/sbin/unix_chkpwd
 endif
 
 override_dh_installchangelogs:

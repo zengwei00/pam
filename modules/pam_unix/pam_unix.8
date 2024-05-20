@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_unix
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_UNIX" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_UNIX" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -71,31 +71,31 @@ Remaining arguments, supported by others functions of this module, are silently 
 \fBsyslog\fR(3)\&.
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Turns on debugging via
 \fBsyslog\fR(3)\&.
 .RE
 .PP
-\fBaudit\fR
+audit
 .RS 4
 A little more extreme than debug\&.
 .RE
 .PP
-\fBquiet\fR
+quiet
 .RS 4
 Turns off informational messages namely messages about session open and close via
 \fBsyslog\fR(3)\&.
 .RE
 .PP
-\fBnullok\fR
+nullok
 .RS 4
 The default action of this module is to not permit the user access to a service if their official password is blank\&. The
 \fBnullok\fR
 argument overrides this default\&.
 .RE
 .PP
-\fBnullresetok\fR
+nullresetok
 .RS 4
 Allow users to authenticate with blank password if password reset is enforced even if
 \fBnullok\fR
@@ -104,24 +104,24 @@ is not set\&. If password reset is not required and
 is not set the authentication with blank password will be denied\&.
 .RE
 .PP
-\fBtry_first_pass\fR
+try_first_pass
 .RS 4
 Before prompting the user for their password, the module first tries the previous stacked module\*(Aqs password in case that satisfies this module as well\&.
 .RE
 .PP
-\fBuse_first_pass\fR
+use_first_pass
 .RS 4
 The argument
 \fBuse_first_pass\fR
 forces the module to use a previous stacked modules password and will never prompt the user \- if no password is available or the password is not appropriate, the user will be denied access\&.
 .RE
 .PP
-\fBnodelay\fR
+nodelay
 .RS 4
 This argument can be used to discourage the authentication component from requesting a delay should the authentication as a whole fail\&. The default action is for the module to request a delay\-on\-failure of the order of two second\&.
 .RE
 .PP
-\fBuse_authtok\fR
+use_authtok
 .RS 4
 When password changing enforce the module to set the new password to the one provided by a previously stacked
 \fBpassword\fR
@@ -130,17 +130,17 @@ module (this is used in the example of the stacking of the
 module documented below)\&.
 .RE
 .PP
-\fBauthtok_type=\fR\fB\fItype\fR\fR
+authtok_type=type
 .RS 4
 This argument can be used to modify the password prompt when changing passwords to include the type of the password\&. Empty by default\&.
 .RE
 .PP
-\fBnis\fR
+nis
 .RS 4
 NIS RPC is used for setting new passwords\&.
 .RE
 .PP
-\fBremember=\fR\fB\fIn\fR\fR
+remember=n
 .RS 4
 The last
 \fIn\fR
@@ -151,75 +151,75 @@ in order to force password change history and keep the user from alternating bet
 module should be used\&.
 .RE
 .PP
-\fBshadow\fR
+shadow
 .RS 4
 Try to maintain a shadow based system\&.
 .RE
 .PP
-\fBmd5\fR
+md5
 .RS 4
 When a user changes their password next, encrypt it with the MD5 algorithm\&.
 .RE
 .PP
-\fBbigcrypt\fR
+bigcrypt
 .RS 4
 When a user changes their password next, encrypt it with the DEC C2 algorithm\&.
 .RE
 .PP
-\fBsha256\fR
+sha256
 .RS 4
 When a user changes their password next, encrypt it with the SHA256 algorithm\&. The SHA256 algorithm must be supported by the
 \fBcrypt\fR(3)
 function\&.
 .RE
 .PP
-\fBsha512\fR
+sha512
 .RS 4
 When a user changes their password next, encrypt it with the SHA512 algorithm\&. The SHA512 algorithm must be supported by the
 \fBcrypt\fR(3)
 function\&.
 .RE
 .PP
-\fBblowfish\fR
+blowfish
 .RS 4
 When a user changes their password next, encrypt it with the blowfish algorithm\&. The blowfish algorithm must be supported by the
 \fBcrypt\fR(3)
 function\&.
 .RE
 .PP
-\fBgost_yescrypt\fR
+gost_yescrypt
 .RS 4
 When a user changes their password next, encrypt it with the gost\-yescrypt algorithm\&. The gost\-yescrypt algorithm must be supported by the
 \fBcrypt\fR(3)
 function\&.
 .RE
 .PP
-\fByescrypt\fR
+yescrypt
 .RS 4
 When a user changes their password next, encrypt it with the yescrypt algorithm\&. The yescrypt algorithm must be supported by the
 \fBcrypt\fR(3)
 function\&.
 .RE
 .PP
-\fBrounds=\fR\fB\fIn\fR\fR
+rounds=n
 .RS 4
 Set the optional number of rounds of the SHA256, SHA512, blowfish, gost\-yescrypt, and yescrypt password hashing algorithms to
 \fIn\fR\&.
 .RE
 .PP
-\fBbroken_shadow\fR
+broken_shadow
 .RS 4
 Ignore errors reading shadow information for users in the account management module\&.
 .RE
 .PP
-\fBminlen=\fR\fB\fIn\fR\fR
+minlen=n
 .RS 4
 Set a minimum password length of
 \fIn\fR
 characters\&. The max\&. for DES crypt based passwords are 8 characters\&.
 .RE
 .PP
-\fBno_pass_expiry\fR
+no_pass_expiry
 .RS 4
 When set ignore password expiration as defined by the
 \fIshadow\fR

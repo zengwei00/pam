@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_issue
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_ISSUE" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_ISSUE" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,69 +38,69 @@ pam_issue is a PAM module to prepend an issue file to the username prompt\&. It 
 .PP
 Recognized escapes:
 .PP
-\fB\ed\fR
+\ed
 .RS 4
 current day
 .RE
 .PP
-\fB\el\fR
+\el
 .RS 4
 name of this tty
 .RE
 .PP
-\fB\em\fR
+\em
 .RS 4
 machine architecture (uname \-m)
 .RE
 .PP
-\fB\en\fR
+\en
 .RS 4
 machine\*(Aqs network node hostname (uname \-n)
 .RE
 .PP
-\fB\eo\fR
+\eo
 .RS 4
 domain name of this system
 .RE
 .PP
-\fB\er\fR
+\er
 .RS 4
 release number of operating system (uname \-r)
 .RE
 .PP
-\fB\et\fR
+\et
 .RS 4
 current time
 .RE
 .PP
-\fB\es\fR
+\es
 .RS 4
 operating system name (uname \-s)
 .RE
 .PP
-\fB\eu\fR
+\eu
 .RS 4
 number of users currently logged in
 .RE
 .PP
-\fB\eU\fR
+\eU
 .RS 4
 same as \eu except it is suffixed with "user" or "users" (eg\&. "1 user" or "10 users")
 .RE
 .PP
-\fB\ev\fR
+\ev
 .RS 4
 operating system version and build date (uname \-v)
 .RE
 .SH "OPTIONS"
 .PP
 .PP
-\fBnoesc\fR
+noesc
 .RS 4
 Turns off escape code parsing\&.
 .RE
 .PP
-\fBissue=\fR\fB\fIissue\-file\-name\fR\fR
+issue=issue\-file\-name
 .RS 4
 The file to output if not using the default\&.
 .RE

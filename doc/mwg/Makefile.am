@@ -16,28 +16,28 @@ all: Linux-PAM_MWG.txt html/Linux-PAM_MWG.html Linux-PAM_MWG.pdf
 
 Linux-PAM_MWG.pdf: $(XMLS) $(DEP_XMLS)
 if ENABLE_GENERATE_PDF
-	$(XMLLINT) --nonet --xinclude --postvalid --noent --noout $<
+	$(XMLLINT) --nonet --xinclude --relaxng $(DOCBOOK_RNG) --noent --noout $<
 	$(XSLTPROC) --stringparam generate.toc "book toc" \
 	  --stringparam section.autolabel 1 \
 	  --stringparam section.label.includes.component.label 1 \
 	  --stringparam toc.max.depth 3 --xinclude --nonet \
-	http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl $< > Linux-PAM_MWG.fo
+	$(PDF_STYLESHEET) $< > Linux-PAM_MWG.fo
 	$(FO2PDF) Linux-PAM_MWG.fo $@
 else
 	echo "No fo2pdf processor installed, skip PDF generation"
 endif
 
 Linux-PAM_MWG.txt: $(XMLS) $(DEP_XMLS)
-	$(XMLLINT) --nonet --xinclude --postvalid --noent --noout $<
+	$(XMLLINT) --nonet --xinclude --relaxng $(DOCBOOK_RNG) --noent --noout $<
 	$(XSLTPROC) --stringparam generate.toc "book toc" \
 	  --stringparam section.autolabel 1 \
 	  --stringparam section.label.includes.component.label 1 \
 	  --stringparam toc.max.depth 3 --xinclude --nonet \
-	  http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl $< | $(BROWSER) > $@
+	  $(TXT_STYLESHEET) $< | $(BROWSER) > $@
 
 html/Linux-PAM_MWG.html: $(XMLS) $(DEP_XMLS)
 	@test -d html || mkdir -p html
-	$(XMLLINT) --nonet --xinclude --postvalid --noent --noout $<
+	$(XMLLINT) --nonet --xinclude --relaxng $(DOCBOOK_RNG) --noent --noout $<
 	$(XSLTPROC) --stringparam base.dir html/ \
 	  --stringparam root.filename Linux-PAM_MWG \
 	  --stringparam use.id.as.filename 1 \
@@ -46,7 +46,7 @@ html/Linux-PAM_MWG.html: $(XMLS) $(DEP_XMLS)
 	  --stringparam section.label.includes.component.label 1 \
 	  --stringparam toc.max.depth 3 --xinclude --nonet \
 	  --stringparam chunker.output.encoding UTF-8 \
-	  http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl $<
+	  $(HTML_STYLESHEET) $<
 
 distclean-local:
 	-rm -rf html Linux-PAM_MWG.txt Linux-PAM_MWG.pdf

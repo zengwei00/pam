@@ -15,10 +15,14 @@ dist_check_SCRIPTS = tst-pam_group
 TESTS = $(dist_check_SCRIPTS)
 
 securelibdir = $(SECUREDIR)
+if HAVE_VENDORDIR
+secureconfdir = $(VENDOR_SCONFIGDIR)
+else
 secureconfdir = $(SCONFIGDIR)
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/libpam/include -I$(top_srcdir)/libpamc/include \
-	-DPAM_GROUP_CONF=\"$(SCONFIGDIR)/group.conf\" $(WARN_CFLAGS)
+	    $(WARN_CFLAGS)
 AM_LDFLAGS = -no-undefined -avoid-version -module
 if HAVE_VERSIONING
   AM_LDFLAGS += -Wl,--version-script=$(srcdir)/../modules.map

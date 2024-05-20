@@ -14,6 +14,9 @@ polyinstantiated directory path, the instance directory path, flag whether the
 instance directory was newly created (0 for no, 1 for yes), and the user name
 as its arguments.
 
+If /etc/security/namespace.init does not exist, %vendordir%/security/
+namespace.init is the alternative to be used for it.
+
 The pam_namespace module disassociates the session namespace from the parent
 namespace. Any mounts/unmounts performed in the parent namespace, such as
 mounting of devices, are not reflected in the session namespace. To propagate
@@ -116,6 +119,16 @@ instance directory path as its arguments.
 The /etc/security/namespace.conf file specifies which directories are
 polyinstantiated, how they are polyinstantiated, how instance directories would
 be named, and any users for whom polyinstantiation would not be performed.
+
+The /etc/security/namespace.conf file ( or %vendordir%/security/namespace.conf
+if it does not exist) specifies which directories are polyinstantiated, how
+they are polyinstantiated, how instance directories would be named, and any
+users for whom polyinstantiation would not be performed. Then individual *.conf
+files from the /etc/security/namespace.d/ and %vendordir%/security/namespace.d
+directories are taken too. If /etc/security/namespace.d/@filename@.conf exists,
+then %vendordir%/security/namespace.d/@filename@.conf will not be used. All
+namespace.d/*.conf files are sorted by their @filename@.conf in lexicographic
+order regardless of which of the directories they reside in.
 
 When someone logs in, the file namespace.conf is scanned. Comments are marked
 by # characters. Each non comment line represents one polyinstantiated

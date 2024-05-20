@@ -393,7 +393,6 @@ free_module_data(module_data_t *data)
   freecon(data->prev_exec_context);
   if (data->exec_context != data->default_user_context)
     freecon(data->exec_context);
-  memset(data, 0, sizeof(*data));
   free(data);
 }
 
@@ -553,7 +552,7 @@ compute_tty_context(const pam_handle_t *pamh, module_data_t *data)
     }
     pam_syslog(pamh, LOG_ERR, "Failed to get current context for %s: %m",
 	       data->tty_path);
-    return (security_getenforce() == 1) ? PAM_SESSION_ERR : PAM_SUCCESS;
+    return (security_getenforce() != 0) ? PAM_SESSION_ERR : PAM_SUCCESS;
   }
 
   tclass = string_to_security_class("chr_file");
@@ -563,7 +562,7 @@ compute_tty_context(const pam_handle_t *pamh, module_data_t *data)
     data->prev_tty_context = NULL;
     free(data->tty_path);
     data->tty_path = NULL;
-    return (security_getenforce() == 1) ? PAM_SESSION_ERR : PAM_SUCCESS;
+    return (security_getenforce() != 0) ? PAM_SESSION_ERR : PAM_SUCCESS;
   }
 
   if (security_compute_relabel(data->exec_context, data->prev_tty_context,
@@ -575,7 +574,7 @@ compute_tty_context(const pam_handle_t *pamh, module_data_t *data)
     data->prev_tty_context = NULL;
     free(data->tty_path);
     data->tty_path = NULL;
-    return (security_getenforce() == 1) ? PAM_SESSION_ERR : PAM_SUCCESS;
+    return (security_getenforce() != 0) ? PAM_SESSION_ERR : PAM_SUCCESS;
   }
 
   return PAM_SUCCESS;
@@ -606,7 +605,7 @@ restore_context(const pam_handle_t *pamh, const module_data_t *data, int debug)
 	       data->prev_exec_context ? data->prev_exec_context : "");
   err |= set_exec_context(pamh, data->prev_exec_context);
 
-  if (err && security_getenforce() == 1)
+  if (err && security_getenforce() != 0)
     return PAM_SESSION_ERR;
 
   return PAM_SUCCESS;
@@ -658,7 +657,7 @@ set_context(pam_handle_t *pamh, const module_data_t *data,
   }
 #endif
 
-  if (err && security_getenforce() == 1)
+  if (err && security_getenforce() != 0)
     return PAM_SESSION_ERR;
 
   return PAM_SUCCESS;
@@ -717,7 +716,7 @@ create_context(pam_handle_t *pamh, int argc, const char **argv,
 
   if (!data->exec_context) {
     free_module_data(data);
-    return (security_getenforce() == 1) ? PAM_SESSION_ERR : PAM_SUCCESS;
+    return (security_getenforce() != 0) ? PAM_SESSION_ERR : PAM_SUCCESS;
   }
 
   if (ttys && (i = compute_tty_context(pamh, data)) != PAM_SUCCESS) {

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_echo
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_ECHO" "8" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM_ECHO" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,32 +40,32 @@ PAM module is for printing text messages to inform user about special things\&. 
 \fI%\fR
 character are interpreted in the following way:
 .PP
-\fI%H\fR
+%H
 .RS 4
 The name of the remote host (PAM_RHOST)\&.
 .RE
 .PP
-\fI%h\fR
+%h
 .RS 4
 The name of the local host\&.
 .RE
 .PP
-\fI%s\fR
+%s
 .RS 4
 The service name (PAM_SERVICE)\&.
 .RE
 .PP
-\fI%t\fR
+%t
 .RS 4
 The name of the controlling terminal (PAM_TTY)\&.
 .RE
 .PP
-\fI%U\fR
+%U
 .RS 4
 The remote user name (PAM_RUSER)\&.
 .RE
 .PP
-\fI%u\fR
+%u
 .RS 4
 The local user name (PAM_USER)\&.
 .RE
@@ -77,7 +77,7 @@ expands to the characters following the
 character\&.
 .SH "OPTIONS"
 .PP
-\fBfile=\fR\fB\fI/path/message\fR\fR
+file=/path/message
 .RS 4
 The content of the file
 /path/message

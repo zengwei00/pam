@@ -12,13 +12,17 @@ dist_man_MANS = time.conf.5 pam_time.8
 endif
 XMLS = README.xml time.conf.5.xml pam_time.8.xml
 dist_check_SCRIPTS = tst-pam_time
-TESTS = $(dist_check_SCRIPTS)
+TESTS = $(dist_check_SCRIPTS) $(check_PROGRAMS)
 
 securelibdir = $(SECUREDIR)
+if HAVE_VENDORDIR
+secureconfdir = $(VENDOR_SCONFIGDIR)
+else
 secureconfdir = $(SCONFIGDIR)
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/libpam/include -I$(top_srcdir)/libpamc/include \
-	-DPAM_TIME_CONF=\"$(SCONFIGDIR)/time.conf\" $(WARN_CFLAGS)
+	    $(WARN_CFLAGS)
 AM_LDFLAGS = -no-undefined -avoid-version -module
 if HAVE_VERSIONING
   AM_LDFLAGS += -Wl,--version-script=$(srcdir)/../modules.map
@@ -27,6 +31,9 @@ pam_time_la_LIBADD = $(top_builddir)/libpam/libpam.la
 
 securelib_LTLIBRARIES = pam_time.la
 dist_secureconf_DATA = time.conf
+
+check_PROGRAMS = tst-pam_time-retval
+tst_pam_time_retval_LDADD = $(top_builddir)/libpam/libpam.la
 
 if ENABLE_REGENERATE_MAN
 dist_noinst_DATA = README

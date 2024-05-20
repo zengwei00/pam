@@ -12,6 +12,9 @@ applying for.
 By default rules for group memberships are taken from config file /etc/security
 /group.conf.
 
+If /etc/security/group.conf does not exist, %vendordir%/security/group.conf is
+used.
+
 This module's usefulness relies on the file-systems accessible to the user. The
 point being that once granted the membership of a group, the user may attempt
 to create a setgid binary with a restricted group ownership. Later, when the

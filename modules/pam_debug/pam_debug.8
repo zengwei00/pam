@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_debug
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_DEBUG" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_DEBUG" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ pam_debug \- PAM module to debug the PAM stack
 The pam_debug PAM module is intended as a debugging aide for determining how the PAM stack is operating\&. This module returns what its module arguments tell it to return\&.
 .SH "OPTIONS"
 .PP
-\fBauth=\fR\fB\fIvalue\fR\fR
+auth=value
 .RS 4
 The
 \fBpam_sm_authenticate\fR(3)
@@ -45,7 +45,7 @@ function will return
 \fIvalue\fR\&.
 .RE
 .PP
-\fBcred=\fR\fB\fIvalue\fR\fR
+cred=value
 .RS 4
 The
 \fBpam_sm_setcred\fR(3)
@@ -53,7 +53,7 @@ function will return
 \fIvalue\fR\&.
 .RE
 .PP
-\fBacct=\fR\fB\fIvalue\fR\fR
+acct=value
 .RS 4
 The
 \fBpam_sm_acct_mgmt\fR(3)
@@ -61,7 +61,7 @@ function will return
 \fIvalue\fR\&.
 .RE
 .PP
-\fBprechauthtok=\fR\fB\fIvalue\fR\fR
+prechauthtok=value
 .RS 4
 The
 \fBpam_sm_chauthtok\fR(3)
@@ -72,7 +72,7 @@ if the
 flag is set\&.
 .RE
 .PP
-\fBchauthtok=\fR\fB\fIvalue\fR\fR
+chauthtok=value
 .RS 4
 The
 \fBpam_sm_chauthtok\fR(3)
@@ -85,7 +85,7 @@ flag is
 set\&.
 .RE
 .PP
-\fBopen_session=\fR\fB\fIvalue\fR\fR
+open_session=value
 .RS 4
 The
 \fBpam_sm_open_session\fR(3)
@@ -93,7 +93,7 @@ function will return
 \fIvalue\fR\&.
 .RE
 .PP
-\fBclose_session=\fR\fB\fIvalue\fR\fR
+close_session=value
 .RS 4
 The
 \fBpam_sm_close_session\fR(3)

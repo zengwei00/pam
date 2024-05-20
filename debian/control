@@ -3,8 +3,8 @@ Section: libs
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Steve Langasek <vorlon@debian.org>
-Standards-Version: 4.6.0
-Build-Depends: debhelper-compat (= 13), dh-exec, quilt, flex, libdb-dev, libcrypt-dev, libselinux1-dev [linux-any], po-debconf, dh-autoreconf, autopoint, libaudit-dev [linux-any] <!stage1>, pkg-config, libfl-dev, libfl-dev:native, docbook-xsl, docbook-xml, xsltproc, libxml2-utils, w3m
+Standards-Version: 4.6.2
+Build-Depends: debhelper-compat (= 13), dh-exec,  flex,  libcrypt-dev, libdb-dev, libselinux1-dev [linux-any], libsystemd-dev [linux-any] <!stage1>, po-debconf, autopoint, libaudit-dev [linux-any] <!stage1>, pkg-config, libfl-dev, libfl-dev:native, docbook-xsl-ns, docbook5-xml, xsltproc, libxml2-utils, w3m
 Build-Conflicts-Indep: fop
 Build-Conflicts: libdb4.2-dev, libxcrypt-dev
 Vcs-Browser: https://salsa.debian.org/vorlon/pam
@@ -15,7 +15,8 @@ Rules-Requires-Root: binary-targets
 Package: libpam0g
 Architecture: any
 Multi-Arch: same
-Replaces: libpam0g-util
+Replaces: libpam0g-util, libpam0t64 (<< 1.5.3-5)
+Breaks: libpam0t64 (<< 1.5.3-5)
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Suggests: libpam-doc
@@ -85,6 +86,7 @@ Provides: pam-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
+Multi-Arch: foreign
 Description: Documentation of PAM
  Contains documentation (in HTML, ASCII, and PostScript format) for libpam,
  the Pluggable Authentication Modules library, a library that enables the

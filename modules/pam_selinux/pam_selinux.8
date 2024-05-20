@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_selinux
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_SELINUX" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_SELINUX" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,43 +51,43 @@ should be placed before them\&. When such a placement is not feasible,
 could be used to temporary restore original security contexts\&.
 .SH "OPTIONS"
 .PP
-\fBopen\fR
+open
 .RS 4
 Only execute the open_session part of the module\&.
 .RE
 .PP
-\fBclose\fR
+close
 .RS 4
 Only execute the close_session part of the module\&.
 .RE
 .PP
-\fBrestore\fR
+restore
 .RS 4
 In open_session part of the module, temporarily restore the security contexts as they were before the previous call of the module\&. Another call of this module without the restore option will set up the new security contexts again\&.
 .RE
 .PP
-\fBnottys\fR
+nottys
 .RS 4
 Do not setup security context of the controlling terminal\&.
 .RE
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Turn on debug messages via
 \fBsyslog\fR(3)\&.
 .RE
 .PP
-\fBverbose\fR
+verbose
 .RS 4
 Attempt to inform the user when security context is set\&.
 .RE
 .PP
-\fBselect_context\fR
+select_context
 .RS 4
 Attempt to ask the user for a custom security context role\&. If MLS is on, ask also for sensitivity level\&.
 .RE
 .PP
-\fBenv_params\fR
+env_params
 .RS 4
 Attempt to obtain a custom security context role from PAM environment\&. If MLS is on, obtain also sensitivity level\&. This option and the select_context option are mutually exclusive\&. The respective PAM environment variables are
 \fISELINUX_ROLE_REQUESTED\fR,
@@ -95,7 +95,7 @@ Attempt to obtain a custom security context role from PAM environment\&. If MLS 
 \fISELINUX_USE_CURRENT_RANGE\fR\&. The first two variables are self describing and the last one if set to 1 makes the PAM module behave as if the use_current_range was specified on the command line of the module\&.
 .RE
 .PP
-\fBuse_current_range\fR
+use_current_range
 .RS 4
 Use the sensitivity level of the current process for the user context instead of the default level\&. Also suppresses asking of the sensitivity level from the user or obtaining it from PAM environment\&.
 .RE

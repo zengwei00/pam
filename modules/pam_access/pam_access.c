@@ -56,6 +56,13 @@
 #include "pam_cc_compat.h"
 #include "pam_inline.h"
 
+#define PAM_ACCESS_CONFIG	(SCONFIGDIR "/access.conf")
+#define ACCESS_CONF_GLOB	(SCONFIGDIR "/access.d/*.conf")
+#ifdef VENDOR_SCONFIGDIR
+#define VENDOR_PAM_ACCESS_CONFIG (VENDOR_SCONFIGDIR "/access.conf")
+#define VENDOR_ACCESS_CONF_GLOB  (VENDOR_SCONFIGDIR "/access.d/*.conf")
+#endif
+
 /* login_access.c from logdaemon-5.6 with several changes by A.Nogin: */
 
  /*
@@ -149,6 +156,95 @@ parse_args(pam_handle_t *pamh, struct login_info *loginfo,
     }
 
     return 1;  /* OK */
+}
+
+/* --- evaluting all files in VENDORDIR/security/access.d and /etc/security/access.d --- */
+static const char *base_name(const char *path)
+{
+    const char *base = strrchr(path, '/');
+    return base ? base+1 : path;
+}
+
+static int
+compare_filename(const void *a, const void *b)
+{
+	return strcmp(base_name(* (const char * const *) a),
+		        base_name(* (const char * const *) b));
+}
+
+/* Evaluating a list of files which have to be parsed in the right order:
+ *
+ * - If etc/security/access.d/@filename@.conf exists, then
+ *   %vendordir%/security/access.d/@filename@.conf should not be used.
+ * - All files in both access.d directories are sorted by their @filename@.conf in
+ *   lexicographic order regardless of which of the directories they reside in. */
+static char **read_access_dir(pam_handle_t *pamh)
+{
+	glob_t globbuf;
+	size_t i=0;
+	int glob_rv = glob(ACCESS_CONF_GLOB, GLOB_ERR | GLOB_NOSORT, NULL, &globbuf);
+	char **file_list;
+	size_t file_list_size = glob_rv == 0 ? globbuf.gl_pathc : 0;
+
+#ifdef VENDOR_ACCESS_CONF_GLOB
+	glob_t globbuf_vendor;
+	int glob_rv_vendor = glob(VENDOR_ACCESS_CONF_GLOB, GLOB_ERR | GLOB_NOSORT, NULL, &globbuf_vendor);
+	if (glob_rv_vendor == 0)
+	    file_list_size += globbuf_vendor.gl_pathc;
+#endif
+	file_list = malloc((file_list_size + 1) * sizeof(char*));
+	if (file_list == NULL) {
+	    pam_syslog(pamh, LOG_ERR, "Cannot allocate memory for file list: %m");
+#ifdef VENDOR_ACCESS_CONF_GLOB
+            if (glob_rv_vendor == 0)
+                globfree(&globbuf_vendor);
+#endif
+            if (glob_rv == 0)
+                globfree(&globbuf);
+	    return NULL;
+	}
+
+	if (glob_rv == 0) {
+	    for (i = 0; i < globbuf.gl_pathc; i++) {
+	        file_list[i] = strdup(globbuf.gl_pathv[i]);
+		if (file_list[i] == NULL) {
+		    pam_syslog(pamh, LOG_ERR, "strdup failed: %m");
+		    break;
+		}
+	    }
+	}
+#ifdef VENDOR_ACCESS_CONF_GLOB
+	if (glob_rv_vendor == 0) {
+	    for (size_t j = 0; j < globbuf_vendor.gl_pathc; j++) {
+		if (glob_rv == 0 && globbuf.gl_pathc > 0) {
+		    int double_found = 0;
+		    for (size_t k = 0; k < globbuf.gl_pathc; k++) {
+		        if (strcmp(base_name(globbuf.gl_pathv[k]),
+				   base_name(globbuf_vendor.gl_pathv[j])) == 0) {
+				double_found = 1;
+				break;
+			}
+		    }
+		    if (double_found)
+			continue;
+		}
+		file_list[i] = strdup(globbuf_vendor.gl_pathv[j]);
+		if (file_list[i] == NULL) {
+		    pam_syslog(pamh, LOG_ERR, "strdup failed: %m");
+		    break;
+		}
+		i++;
+	    }
+	    globfree(&globbuf_vendor);
+	}
+#endif
+	file_list[i] = NULL;
+	qsort(file_list, i, sizeof(char *), compare_filename);
+
+	if (glob_rv == 0)
+	    globfree(&globbuf);
+
+	return file_list;
 }
 
 /* --- static functions for checking whether the user should be let in --- */
@@ -567,7 +663,7 @@ static int
 group_match (pam_handle_t *pamh, const char *tok, const char* usr,
     int debug)
 {
-    char grptok[BUFSIZ];
+    char grptok[BUFSIZ] = {};
 
     if (debug)
         pam_syslog (pamh, LOG_DEBUG,
@@ -577,7 +673,6 @@ group_match (pam_handle_t *pamh, const char *tok, const char* usr,
         return NO;
 
     /* token is received under the format '(...)' */
-    memset(grptok, 0, BUFSIZ);
     strncpy(grptok, tok + 1, strlen(tok) - 2);
 
     if (pam_modutil_user_in_group_nam_nam(pamh, usr, grptok))
@@ -637,7 +732,7 @@ remote_match (pam_handle_t *pamh, char *tok, struct login_info *item)
       if ((str_len = strlen(string)) > tok_len
 	  && strcasecmp(tok, string + str_len - tok_len) == 0)
 	return YES;
-    } else if (tok[tok_len - 1] == '.') {
+    } else if (tok[tok_len - 1] == '.') {       /* internet network numbers (end with ".") */
       struct addrinfo hint;
 
       memset (&hint, '\0', sizeof (hint));
@@ -678,7 +773,7 @@ remote_match (pam_handle_t *pamh, char *tok, struct login_info *item)
       return NO;
     }
 
-    /* Assume network/netmask with an IP of a host.  */
+    /* Assume network/netmask, IP address or hostname.  */
     return network_netmask_match(pamh, tok, string, item);
 }
 
@@ -696,7 +791,7 @@ string_match (pam_handle_t *pamh, const char *tok, const char *string,
     /*
      * If the token has the magic value "ALL" the match always succeeds.
      * Otherwise, return YES if the token fully matches the string.
-	 * "NONE" token matches NULL string.
+     * "NONE" token matches NULL string.
      */
 
     if (strcasecmp(tok, "ALL") == 0) {		/* all: always matches */
@@ -714,7 +809,8 @@ string_match (pam_handle_t *pamh, const char *tok, const char *string,
 
 /* network_netmask_match - match a string against one token
  * where string is a hostname or ip (v4,v6) address and tok
- * represents either a single ip (v4,v6) address or a network/netmask
+ * represents either a hostname, a single ip (v4,v6) address
+ * or a network/netmask
  */
 static int
 network_netmask_match (pam_handle_t *pamh,
@@ -723,10 +819,12 @@ network_netmask_match (pam_handle_t *pamh,
     char *netmask_ptr;
     char netmask_string[MAXHOSTNAMELEN + 1];
     int addr_type;
+    struct addrinfo *ai = NULL;
 
     if (item->debug)
-    pam_syslog (pamh, LOG_DEBUG,
+      pam_syslog (pamh, LOG_DEBUG,
 		"network_netmask_match: tok=%s, item=%s", tok, string);
+
     /* OK, check if tok is of type addr/mask */
     if ((netmask_ptr = strchr(tok, '/')) != NULL)
       {
@@ -760,54 +858,108 @@ network_netmask_match (pam_handle_t *pamh,
 	    netmask_ptr = number_to_netmask(netmask, addr_type,
 		netmask_string, MAXHOSTNAMELEN);
 	  }
-	}
-    else
-	/* NO, then check if it is only an addr */
-	if (isipaddr(tok, NULL, NULL) != YES)
+
+        /*
+         * Construct an addrinfo list from the IP address.
+         * This should not fail as the input is a correct IP address...
+         */
+	if (getaddrinfo (tok, NULL, NULL, &ai) != 0)
 	  {
 	    return NO;
 	  }
+      }
+    else
+      {
+        /*
+	 * It is either an IP address or a hostname.
+	 * Let getaddrinfo sort everything out
+	 */
+	if (getaddrinfo (tok, NULL, NULL, &ai) != 0)
+	  {
+	    pam_syslog(pamh, LOG_ERR, "cannot resolve hostname \"%s\"", tok);
+
+	    return NO;
+	  }
+	netmask_ptr = NULL;
+      }
 
     if (isipaddr(string, NULL, NULL) != YES)
       {
-	/* Assume network/netmask with a name of a host.  */
 	struct addrinfo hint;
 
+	/* Assume network/netmask with a name of a host.  */
 	memset (&hint, '\0', sizeof (hint));
 	hint.ai_flags = AI_CANONNAME;
 	hint.ai_family = AF_UNSPEC;
 
 	if (item->gai_rv != 0)
+	  {
+	    freeaddrinfo(ai);
 	    return NO;
+	  }
 	else if (!item->res &&
 		(item->gai_rv = getaddrinfo (string, NULL, &hint, &item->res)) != 0)
+	  {
+	    freeaddrinfo(ai);
 	    return NO;
+	  }
         else
 	  {
 	    struct addrinfo *runp = item->res;
+	    struct addrinfo *runp1;
 
 	    while (runp != NULL)
 	      {
 		char buf[INET6_ADDRSTRLEN];
 
-		DIAG_PUSH_IGNORE_CAST_ALIGN;
-		inet_ntop (runp->ai_family,
-			runp->ai_family == AF_INET
-			? (void *) &((struct sockaddr_in *) runp->ai_addr)->sin_addr
-			: (void *) &((struct sockaddr_in6 *) runp->ai_addr)->sin6_addr,
-			buf, sizeof (buf));
-		DIAG_POP_IGNORE_CAST_ALIGN;
-
-		if (are_addresses_equal(buf, tok, netmask_ptr))
+		if (getnameinfo (runp->ai_addr, runp->ai_addrlen, buf, sizeof (buf), NULL, 0, NI_NUMERICHOST) != 0)
 		  {
-		    return YES;
+		    freeaddrinfo(ai);
+		    return NO;
+		  }
+
+		for (runp1 = ai; runp1 != NULL; runp1 = runp1->ai_next)
+		  {
+                    char buf1[INET6_ADDRSTRLEN];
+
+                    if (runp->ai_family != runp1->ai_family)
+                      continue;
+
+                    if (getnameinfo (runp1->ai_addr, runp1->ai_addrlen, buf1, sizeof (buf1), NULL, 0, NI_NUMERICHOST) != 0)
+		      {
+			freeaddrinfo(ai);
+			return NO;
+		      }
+
+                    if (are_addresses_equal (buf, buf1, netmask_ptr))
+                      {
+                        freeaddrinfo(ai);
+                        return YES;
+                      }
 		  }
 		runp = runp->ai_next;
 	      }
 	  }
       }
     else
-      return (are_addresses_equal(string, tok, netmask_ptr));
+      {
+       struct addrinfo *runp1;
+
+       for (runp1 = ai; runp1 != NULL; runp1 = runp1->ai_next)
+         {
+           char buf1[INET6_ADDRSTRLEN];
+
+           (void) getnameinfo (runp1->ai_addr, runp1->ai_addrlen, buf1, sizeof (buf1), NULL, 0, NI_NUMERICHOST);
+
+           if (are_addresses_equal(string, buf1, netmask_ptr))
+             {
+               freeaddrinfo(ai);
+               return YES;
+             }
+         }
+      }
+
+  freeaddrinfo(ai);
 
   return NO;
 }
@@ -827,7 +979,6 @@ pam_sm_authenticate (pam_handle_t *pamh, int flags UNUSED,
     struct passwd *user_pw;
     char hostname[MAXHOSTNAMELEN + 1];
     int rv;
-
 
     /* set username */
 
@@ -852,6 +1003,18 @@ pam_sm_authenticate (pam_handle_t *pamh, int flags UNUSED,
 	pam_syslog(pamh, LOG_ERR, "failed to parse the module arguments");
 	return PAM_ABORT;
     }
+
+#ifdef VENDOR_PAM_ACCESS_CONFIG
+    if (loginfo.config_file == default_config) {
+      /* Check whether PAM_ACCESS_CONFIG file is available.
+       * If it does not exist, fall back to VENDOR_PAM_ACCESS_CONFIG file. */
+      struct stat buffer;
+      if (stat(loginfo.config_file, &buffer) != 0 && errno == ENOENT) {
+	default_config = VENDOR_PAM_ACCESS_CONFIG;
+	loginfo.config_file = default_config;
+      }
+    }
+#endif
 
     /* remote host name */
 
@@ -916,23 +1079,18 @@ pam_sm_authenticate (pam_handle_t *pamh, int flags UNUSED,
     rv = login_access(pamh, &loginfo);
 
     if (rv == NOMATCH && loginfo.config_file == default_config) {
-	glob_t globbuf;
-	int i, glob_rv;
-
-	/* We do not manipulate locale as setlocale() is not
-	 * thread safe. We could use uselocale() in future.
-	 */
-	glob_rv = glob(ACCESS_CONF_GLOB, GLOB_ERR, NULL, &globbuf);
-	if (!glob_rv) {
-	    /* Parse the *.conf files. */
-	    for (i = 0; globbuf.gl_pathv[i] != NULL; i++) {
-		loginfo.config_file = globbuf.gl_pathv[i];
-		rv = login_access(pamh, &loginfo);
-		if (rv != NOMATCH)
-		    break;
-	    }
-	    globfree(&globbuf);
-	}
+        char **filename_list = read_access_dir(pamh);
+        if (filename_list != NULL) {
+            for (int i = 0; filename_list[i] != NULL; i++) {
+                loginfo.config_file = filename_list[i];
+                rv = login_access(pamh, &loginfo);
+                if (rv != NOMATCH)
+                    break;
+            }
+            for (int i = 0; filename_list[i] != NULL; i++)
+                free(filename_list[i]);
+            free(filename_list);
+        }
     }
 
     if (loginfo.gai_rv == 0 && loginfo.res)

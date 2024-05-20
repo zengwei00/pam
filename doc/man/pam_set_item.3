@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_set_item
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_SET_ITEM" "3" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM_SET_ITEM" "3" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -69,11 +69,13 @@ The string used when prompting for a user\*(Aqs name\&. The default value for th
 .PP
 PAM_TTY
 .RS 4
-The terminal name: prefixed by
+The terminal name prefixed by
 /dev/
-if it is a device file; for graphical, X\-based, applications the value for this item should be the
+for device files\&. In the past, graphical X\-based applications used to store the
 \fI$DISPLAY\fR
-variable\&.
+variable here, but with the introduction of
+\fIPAM_XDISPLAY\fR
+this usage is deprecated\&.
 .RE
 .PP
 PAM_RUSER

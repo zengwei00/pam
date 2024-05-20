@@ -1,0 +1,15 @@
+pam (1.5.3-7) unstable; urgency=medium
+
+    Starting with PAM version 1.5.3, Debian supports usergroups for default
+    umask of users logging in.  If the primary group name of a user
+    matches their primary user name (user pat's default group is also
+    called pat), then files will be group writable by default. To disable
+    this user a group name that differs from the user name or add
+    nousergroups to the pam_umask line in
+    /etc/pam.d/common-session:
+
+    session optional			pam_umask.so nousergroups
+
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 08 Apr 2024 16:15:58 -0600
+

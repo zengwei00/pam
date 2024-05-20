@@ -14,6 +14,9 @@ from which they are making their request.
 By default rules for time/port access are taken from config file /etc/security/
 time.conf. An alternative file can be specified with the conffile option.
 
+If there is no explicitly specified configuration file and /etc/security/
+time.conf does not exist, %vendordir%/security/time.conf is used.
+
 If Linux PAM is compiled with audit support the module will report when it
 denies access.
 

@@ -98,6 +98,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @HAVE_VERSIONING_TRUE@am__append_1 = -Wl,--version-script=$(srcdir)/../modules.map
+check_PROGRAMS = tst-pam_faillock-retval$(EXEEXT)
 sbin_PROGRAMS = faillock$(EXEEXT)
 subdir = modules/pam_faillock
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -160,7 +161,8 @@ LTLIBRARIES = $(securelib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 pam_faillock_la_DEPENDENCIES = $(top_builddir)/libpam/libpam.la \
 	$(am__DEPENDENCIES_1)
-am_pam_faillock_la_OBJECTS = pam_faillock.lo faillock.lo
+am_pam_faillock_la_OBJECTS = pam_faillock.lo faillock.lo \
+	faillock_config.lo
 pam_faillock_la_OBJECTS = $(am_pam_faillock_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -171,13 +173,17 @@ pam_faillock_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_CFLAGS) $(CFLAGS) $(pam_faillock_la_LDFLAGS) $(LDFLAGS) \
 	-o $@
 am_faillock_OBJECTS = faillock-main.$(OBJEXT) \
-	faillock-faillock.$(OBJEXT)
+	faillock-faillock.$(OBJEXT) faillock-faillock_config.$(OBJEXT)
 faillock_OBJECTS = $(am_faillock_OBJECTS)
 faillock_DEPENDENCIES = $(top_builddir)/libpam/libpam.la \
 	$(am__DEPENDENCIES_1)
 faillock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(faillock_CFLAGS) \
 	$(CFLAGS) $(faillock_LDFLAGS) $(LDFLAGS) -o $@
+tst_pam_faillock_retval_SOURCES = tst-pam_faillock-retval.c
+tst_pam_faillock_retval_OBJECTS = tst-pam_faillock-retval.$(OBJEXT)
+tst_pam_faillock_retval_DEPENDENCIES =  \
+	$(top_builddir)/libpam/libpam.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -194,8 +200,10 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/faillock-faillock.Po \
+	./$(DEPDIR)/faillock-faillock_config.Po \
 	./$(DEPDIR)/faillock-main.Po ./$(DEPDIR)/faillock.Plo \
-	./$(DEPDIR)/pam_faillock.Plo
+	./$(DEPDIR)/faillock_config.Plo ./$(DEPDIR)/pam_faillock.Plo \
+	./$(DEPDIR)/tst-pam_faillock-retval.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -215,8 +223,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(pam_faillock_la_SOURCES) $(faillock_SOURCES)
-DIST_SOURCES = $(pam_faillock_la_SOURCES) $(faillock_SOURCES)
+SOURCES = $(pam_faillock_la_SOURCES) $(faillock_SOURCES) \
+	tst-pam_faillock-retval.c
+DIST_SOURCES = $(pam_faillock_la_SOURCES) $(faillock_SOURCES) \
+	tst-pam_faillock-retval.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -455,6 +465,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOCBOOK_RNG = @DOCBOOK_RNG@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
@@ -467,11 +478,13 @@ EXEEXT = @EXEEXT@
 EXE_CFLAGS = @EXE_CFLAGS@
 EXE_LDFLAGS = @EXE_LDFLAGS@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 FO2PDF = @FO2PDF@
 GETTEXT_MACRO_VERSION = @GETTEXT_MACRO_VERSION@
 GMSGFMT = @GMSGFMT@
 GMSGFMT_015 = @GMSGFMT_015@
 GREP = @GREP@
+HTML_STYLESHEET = @HTML_STYLESHEET@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -503,12 +516,14 @@ LIBSELINUX = @LIBSELINUX@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
+LOGIND_CFLAGS = @LOGIND_CFLAGS@
 LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
+MAN_STYLESHEET = @MAN_STYLESHEET@
 MKDIR_P = @MKDIR_P@
 MSGFMT = @MSGFMT@
 MSGFMT_015 = @MSGFMT_015@
@@ -531,6 +546,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PDF_STYLESHEET = @PDF_STYLESHEET@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -541,12 +557,16 @@ SECUREDIR = @SECUREDIR@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-STRINGPARAM_HMAC = @STRINGPARAM_HMAC@
+STRINGPARAM_PROFILECONDITIONS = @STRINGPARAM_PROFILECONDITIONS@
 STRINGPARAM_VENDORDIR = @STRINGPARAM_VENDORDIR@
 STRIP = @STRIP@
+SYSTEMD_CFLAGS = @SYSTEMD_CFLAGS@
+SYSTEMD_LIBS = @SYSTEMD_LIBS@
 TIRPC_CFLAGS = @TIRPC_CFLAGS@
 TIRPC_LIBS = @TIRPC_LIBS@
+TXT_STYLESHEET = @TXT_STYLESHEET@
 USE_NLS = @USE_NLS@
+VENDOR_SCONFIGDIR = @VENDOR_SCONFIGDIR@
 VERSION = @VERSION@
 WARN_CFLAGS = @WARN_CFLAGS@
 XGETTEXT = @XGETTEXT@
@@ -618,10 +638,11 @@ EXTRA_DIST = $(XMLS)
 @HAVE_DOC_TRUE@dist_man_MANS = pam_faillock.8 faillock.8 faillock.conf.5
 XMLS = README.xml pam_faillock.8.xml faillock.8.xml faillock.conf.5.xml
 dist_check_SCRIPTS = tst-pam_faillock
-TESTS = $(dist_check_SCRIPTS)
+TESTS = $(dist_check_SCRIPTS) $(check_PROGRAMS)
 securelibdir = $(SECUREDIR)
-secureconfdir = $(SCONFIGDIR)
-noinst_HEADERS = faillock.h
+@HAVE_VENDORDIR_FALSE@secureconfdir = $(SCONFIGDIR)
+@HAVE_VENDORDIR_TRUE@secureconfdir = $(VENDOR_SCONFIGDIR)
+noinst_HEADERS = faillock.h faillock_config.h
 AM_CFLAGS = -I$(top_srcdir)/libpam/include -I$(top_srcdir)/libpamc/include \
 	$(WARN_CFLAGS)
 
@@ -629,12 +650,13 @@ faillock_CFLAGS = $(AM_CFLAGS) @EXE_CFLAGS@
 pam_faillock_la_LDFLAGS = -no-undefined -avoid-version -module \
 	$(am__append_1)
 pam_faillock_la_LIBADD = $(top_builddir)/libpam/libpam.la $(LIBAUDIT)
+tst_pam_faillock_retval_LDADD = $(top_builddir)/libpam/libpam.la
 faillock_LDFLAGS = @EXE_LDFLAGS@
 faillock_LDADD = $(top_builddir)/libpam/libpam.la $(LIBAUDIT)
 dist_secureconf_DATA = faillock.conf
 securelib_LTLIBRARIES = pam_faillock.la
-pam_faillock_la_SOURCES = pam_faillock.c faillock.c
-faillock_SOURCES = main.c faillock.c
+pam_faillock_la_SOURCES = pam_faillock.c faillock.c faillock_config.c
+faillock_SOURCES = main.c faillock.c faillock_config.c
 @ENABLE_REGENERATE_MAN_TRUE@dist_noinst_DATA = README
 all: all-am
 
@@ -669,6 +691,15 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+clean-checkPROGRAMS:
+	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 install-sbinPROGRAMS: $(sbin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(sbin_PROGRAMS)'; test -n "$(sbindir)" || list=; \
@@ -761,6 +792,10 @@ faillock$(EXEEXT): $(faillock_OBJECTS) $(faillock_DEPENDENCIES) $(EXTRA_faillock
 	@rm -f faillock$(EXEEXT)
 	$(AM_V_CCLD)$(faillock_LINK) $(faillock_OBJECTS) $(faillock_LDADD) $(LIBS)
 
+tst-pam_faillock-retval$(EXEEXT): $(tst_pam_faillock_retval_OBJECTS) $(tst_pam_faillock_retval_DEPENDENCIES) $(EXTRA_tst_pam_faillock_retval_DEPENDENCIES) 
+	@rm -f tst-pam_faillock-retval$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tst_pam_faillock_retval_OBJECTS) $(tst_pam_faillock_retval_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -768,9 +803,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faillock-faillock.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faillock-faillock_config.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faillock-main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faillock.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faillock_config.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pam_faillock.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tst-pam_faillock-retval.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -826,6 +864,20 @@ faillock-faillock.obj: faillock.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='faillock.c' object='faillock-faillock.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faillock_CFLAGS) $(CFLAGS) -c -o faillock-faillock.obj `if test -f 'faillock.c'; then $(CYGPATH_W) 'faillock.c'; else $(CYGPATH_W) '$(srcdir)/faillock.c'; fi`
+
+faillock-faillock_config.o: faillock_config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faillock_CFLAGS) $(CFLAGS) -MT faillock-faillock_config.o -MD -MP -MF $(DEPDIR)/faillock-faillock_config.Tpo -c -o faillock-faillock_config.o `test -f 'faillock_config.c' || echo '$(srcdir)/'`faillock_config.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/faillock-faillock_config.Tpo $(DEPDIR)/faillock-faillock_config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='faillock_config.c' object='faillock-faillock_config.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faillock_CFLAGS) $(CFLAGS) -c -o faillock-faillock_config.o `test -f 'faillock_config.c' || echo '$(srcdir)/'`faillock_config.c
+
+faillock-faillock_config.obj: faillock_config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faillock_CFLAGS) $(CFLAGS) -MT faillock-faillock_config.obj -MD -MP -MF $(DEPDIR)/faillock-faillock_config.Tpo -c -o faillock-faillock_config.obj `if test -f 'faillock_config.c'; then $(CYGPATH_W) 'faillock_config.c'; else $(CYGPATH_W) '$(srcdir)/faillock_config.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/faillock-faillock_config.Tpo $(DEPDIR)/faillock-faillock_config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='faillock_config.c' object='faillock-faillock_config.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faillock_CFLAGS) $(CFLAGS) -c -o faillock-faillock_config.obj `if test -f 'faillock_config.c'; then $(CYGPATH_W) 'faillock_config.c'; else $(CYGPATH_W) '$(srcdir)/faillock_config.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1112,7 +1164,7 @@ $(TEST_SUITE_LOG): $(TEST_LOGS)
 	fi;								\
 	$$success || exit 1
 
-check-TESTS: $(dist_check_SCRIPTS)
+check-TESTS: $(check_PROGRAMS) $(dist_check_SCRIPTS)
 	@list='$(RECHECK_LOGS)';           test -z "$$list" || rm -f $$list
 	@list='$(RECHECK_LOGS:.log=.trs)'; test -z "$$list" || rm -f $$list
 	@test -z "$(TEST_SUITE_LOG)" || rm -f $(TEST_SUITE_LOG)
@@ -1122,7 +1174,7 @@ check-TESTS: $(dist_check_SCRIPTS)
 	log_list=`echo $$log_list`; trs_list=`echo $$trs_list`; \
 	$(MAKE) $(AM_MAKEFLAGS) $(TEST_SUITE_LOG) TEST_LOGS="$$log_list"; \
 	exit $$?;
-recheck: all $(dist_check_SCRIPTS)
+recheck: all $(check_PROGRAMS) $(dist_check_SCRIPTS)
 	@test -z "$(TEST_SUITE_LOG)" || rm -f $(TEST_SUITE_LOG)
 	@set +e; $(am__set_TESTS_bases); \
 	bases=`for i in $$bases; do echo $$i; done \
@@ -1136,6 +1188,13 @@ recheck: all $(dist_check_SCRIPTS)
 tst-pam_faillock.log: tst-pam_faillock
 	@p='tst-pam_faillock'; \
 	b='tst-pam_faillock'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tst-pam_faillock-retval.log: tst-pam_faillock-retval$(EXEEXT)
+	@p='tst-pam_faillock-retval$(EXEEXT)'; \
+	b='tst-pam_faillock-retval'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1189,7 +1248,8 @@ distdir-am: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(dist_check_SCRIPTS)
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS) \
+	  $(dist_check_SCRIPTS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
 all-am: Makefile $(PROGRAMS) $(LTLIBRARIES) $(MANS) $(DATA) $(HEADERS)
@@ -1234,14 +1294,17 @@ maintainer-clean-generic:
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-sbinPROGRAMS \
-	clean-securelibLTLIBRARIES mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
+	clean-sbinPROGRAMS clean-securelibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/faillock-faillock.Po
+	-rm -f ./$(DEPDIR)/faillock-faillock_config.Po
 	-rm -f ./$(DEPDIR)/faillock-main.Po
 	-rm -f ./$(DEPDIR)/faillock.Plo
+	-rm -f ./$(DEPDIR)/faillock_config.Plo
 	-rm -f ./$(DEPDIR)/pam_faillock.Plo
+	-rm -f ./$(DEPDIR)/tst-pam_faillock-retval.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1289,9 +1352,12 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/faillock-faillock.Po
+	-rm -f ./$(DEPDIR)/faillock-faillock_config.Po
 	-rm -f ./$(DEPDIR)/faillock-main.Po
 	-rm -f ./$(DEPDIR)/faillock.Plo
+	-rm -f ./$(DEPDIR)/faillock_config.Plo
 	-rm -f ./$(DEPDIR)/pam_faillock.Plo
+	-rm -f ./$(DEPDIR)/tst-pam_faillock-retval.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1316,9 +1382,9 @@ uninstall-man: uninstall-man5 uninstall-man8
 .MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-TESTS \
-	check-am clean clean-generic clean-libtool clean-sbinPROGRAMS \
-	clean-securelibLTLIBRARIES cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic \
+	check-am clean clean-checkPROGRAMS clean-generic clean-libtool \
+	clean-sbinPROGRAMS clean-securelibLTLIBRARIES cscopelist-am \
+	ctags ctags-am distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dist_secureconfDATA install-dvi \

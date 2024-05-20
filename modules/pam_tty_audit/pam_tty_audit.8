@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_tty_audit
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_TTY_AUDIT" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_TTY_AUDIT" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ pam_tty_audit \- Enable or disable TTY auditing for specified users
 The pam_tty_audit PAM module is used to enable or disable TTY auditing\&. By default, the kernel does not audit input on any TTY\&.
 .SH "OPTIONS"
 .PP
-\fBdisable=\fR\fB\fIpatterns\fR\fR
+disable=patterns
 .RS 4
 For each user matching
 \fB\fIpatterns\fR\fR, disable TTY auditing\&. This overrides any previous
@@ -46,7 +46,7 @@ option matching the same user name on the command line\&. See NOTES for further 
 \fB\fIpatterns\fR\fR\&.
 .RE
 .PP
-\fBenable=\fR\fB\fIpatterns\fR\fR
+enable=patterns
 .RS 4
 For each user matching
 \fB\fIpatterns\fR\fR, enable TTY auditing\&. This overrides any previous
@@ -55,7 +55,7 @@ option matching the same user name on the command line\&. See NOTES for further 
 \fB\fIpatterns\fR\fR\&.
 .RE
 .PP
-\fBopen_only\fR
+open_only
 .RS 4
 Set the TTY audit flag when opening the session, but do not restore it when closing the session\&. Using this option is necessary for some services that don\*(Aqt
 \fBfork()\fR
@@ -63,7 +63,7 @@ to run the authenticated session, such as
 \fBsudo\fR\&.
 .RE
 .PP
-\fBlog_passwd\fR
+log_passwd
 .RS 4
 Log keystrokes when ECHO mode is off but ICANON mode is active\&. This is the mode in which the tty is placed during password entry\&. By default, passwords are not logged\&. This option may not be available on older kernels (3\&.9?)\&.
 .RE

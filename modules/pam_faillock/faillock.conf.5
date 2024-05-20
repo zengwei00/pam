@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: faillock.conf
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "FAILLOCK\&.CONF" "5" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "FAILLOCK\&.CONF" "5" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,54 +47,58 @@ character\&. The whitespace at the beginning of line, end of line, and around th
 sign is ignored\&.
 .SH "OPTIONS"
 .PP
-\fBdir=\fR\fB\fI/path/to/tally\-directory\fR\fR
+dir=/path/to/tally\-directory
 .RS 4
 The directory where the user files with the failure records are kept\&. The default is
 /var/run/faillock\&.
+.sp
+Note: These files will disappear after reboot on systems configured with directory
+/var/run/faillock
+mounted on virtual memory\&.
 .RE
 .PP
-\fBaudit\fR
+audit
 .RS 4
 Will log the user name into the system log if the user is not found\&.
 .RE
 .PP
-\fBsilent\fR
+silent
 .RS 4
 Don\*(Aqt print informative messages to the user\&. Please note that when this option is not used there will be difference in the authentication behavior for users which exist on the system and non\-existing users\&.
 .RE
 .PP
-\fBno_log_info\fR
+no_log_info
 .RS 4
 Don\*(Aqt log informative messages via
 \fBsyslog\fR(3)\&.
 .RE
 .PP
-\fBlocal_users_only\fR
+local_users_only
 .RS 4
 Only track failed user authentications attempts for local users in /etc/passwd and ignore centralized (AD, IdM, LDAP, etc\&.) users\&. The
 \fBfaillock\fR(8)
 command will also no longer track user failed authentication attempts\&. Enabling this option will prevent a double\-lockout scenario where a user is locked out locally and in the centralized mechanism\&.
 .RE
 .PP
-\fBnodelay\fR
+nodelay
 .RS 4
 Don\*(Aqt enforce a delay after authentication failures\&.
 .RE
 .PP
-\fBdeny=\fR\fB\fIn\fR\fR
+deny=n
 .RS 4
 Deny access if the number of consecutive authentication failures for this user during the recent interval exceeds
 \fIn\fR\&. The default is 3\&.
 .RE
 .PP
-\fBfail_interval=\fR\fB\fIn\fR\fR
+fail_interval=n
 .RS 4
 The length of the interval during which the consecutive authentication failures must happen for the user account lock out is
 \fIn\fR
 seconds\&. The default is 900 (15 minutes)\&.
 .RE
 .PP
-\fBunlock_time=\fR\fB\fIn\fR\fR
+unlock_time=n
 .RS 4
 The access will be re\-enabled after
 \fIn\fR
@@ -113,12 +117,12 @@ option\&.
 Also note that it is usually undesirable to permanently lock out users as they can become easily a target of denial of service attack unless the usernames are random and kept secret to potential attackers\&.
 .RE
 .PP
-\fBeven_deny_root\fR
+even_deny_root
 .RS 4
 Root account can become locked as well as regular accounts\&.
 .RE
 .PP
-\fBroot_unlock_time=\fR\fB\fIn\fR\fR
+root_unlock_time=n
 .RS 4
 This option implies
 \fBeven_deny_root\fR
@@ -129,7 +133,7 @@ seconds to root account after the account is locked\&. In case the option is not
 option\&.
 .RE
 .PP
-\fBadmin_group=\fR\fB\fIname\fR\fR
+admin_group=name
 .RS 4
 If a group name is specified with this option, members of the group will be handled by this module the same as the root account (the options
 \fBeven_deny_root\fR

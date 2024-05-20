@@ -54,6 +54,7 @@
 #include <security/pam_modutil.h>
 
 #include "hmac_openssl_wrapper.h"
+#include "pam_inline.h"
 
 #define LOGIN_DEFS          "/etc/login.defs"
 #define CRYPTO_KEY          "HMAC_CRYPTO_ALGO"
@@ -144,7 +145,7 @@ read_file(pam_handle_t *pamh, int fd, char **text, size_t *text_length)
 
     if (bytes_read < (size_t)st.st_size) {
         pam_syslog(pamh, LOG_ERR, "Short read on key file");
-        memset(tmp, 0, st.st_size);
+        pam_overwrite_n(tmp, st.st_size);
         free(tmp);
         return PAM_AUTH_ERR;
     }
@@ -167,14 +168,14 @@ write_file(pam_handle_t *pamh, const char *file_name, char *text,
               S_IRUSR | S_IWUSR);
     if (fd == -1) {
         pam_syslog(pamh, LOG_ERR, "Unable to open [%s]: %m", file_name);
-        memset(text, 0, text_length);
+        pam_overwrite_n(text, text_length);
         free(text);
         return PAM_AUTH_ERR;
     }
 
     if (fchown(fd, owner, group) == -1) {
         pam_syslog(pamh, LOG_ERR, "Unable to change ownership [%s]: %m", file_name);
-        memset(text, 0, text_length);
+        pam_overwrite_n(text, text_length);
         free(text);
         close(fd);
         return PAM_AUTH_ERR;
@@ -294,7 +295,7 @@ done:
         free(hmac_message);
     }
     if (key != NULL) {
-        memset(key, 0, key_length);
+        pam_overwrite_n(key, key_length);
         free(key);
     }
     if (ctx != NULL) {

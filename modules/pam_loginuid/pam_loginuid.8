@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_loginuid
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_LOGINUID" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_LOGINUID" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ pam_loginuid \- Record user\*(Aqs login uid to the process attribute
 The pam_loginuid module sets the loginuid process attribute for the process that was authenticated\&. This is necessary for applications to be correctly audited\&. This PAM module should only be used for entry point applications like: login, sshd, gdm, vsftpd, crond and atd\&. There are probably other entry point applications besides these\&. You should not use it for applications like sudo or su as that defeats the purpose by changing the loginuid to the account they just switched to\&.
 .SH "OPTIONS"
 .PP
-\fBrequire_auditd\fR
+require_auditd
 .RS 4
 This option, when given, will cause this module to query the audit daemon status and deny logins if it is not running\&.
 .RE

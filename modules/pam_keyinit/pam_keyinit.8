@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_keyinit
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_KEYINIT" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_KEYINIT" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -61,18 +61,18 @@ The keyutils package is used to manipulate keys more directly\&. This can be obt
 \m[blue]\fBKeyutils\fR\m[]\&\s-2\u[1]\d\s+2
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Log debug information with
 \fBsyslog\fR(3)\&.
 .RE
 .PP
-\fBforce\fR
+force
 .RS 4
 Causes the session keyring of the invoking process to be replaced unconditionally\&.
 .RE
 .PP
-\fBrevoke\fR
+revoke
 .RS 4
 Causes the session keyring of the invoking process to be revoked when the invoking process exits if the session keyring was created for this process in the first place\&.
 .RE

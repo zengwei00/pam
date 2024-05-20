@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam.conf
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM\&.CONF" "5" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM\&.CONF" "5" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,9 +34,12 @@ pam.conf, pam.d \- PAM configuration files
 When a
 \fIPAM\fR
 aware privilege granting application is started, it activates its attachment to the PAM\-API\&. This activation performs a number of tasks, the most important being the reading of the configuration file(s):
-/etc/pam\&.conf\&. Alternatively, this may be the contents of the
-/etc/pam\&.d/
-directory\&. The presence of this directory will cause Linux\-PAM to ignore
+/etc/pam\&.conf\&. Alternatively and preferably, the configuration can be set by individual configuration files located in a
+pam\&.d
+directory\&. The presence of this directory will cause
+\fBLinux\-PAM\fR
+to
+\fIignore\fR
 /etc/pam\&.conf\&.
 .PP
 These files list the
@@ -351,11 +354,18 @@ When using this convention, you can include `[\*(Aq characters inside the string
 Any line in (one of) the configuration file(s), that is not formatted correctly, will generally tend (erring on the side of caution) to make the authentication process fail\&. A corresponding error is written to the system log files with a call to
 \fBsyslog\fR(3)\&.
 .PP
-More flexible than the single configuration file is it to configure libpam via the contents of the
-/etc/pam\&.d/
-directory\&. In this case the directory is filled with files each of which has a filename equal to a service\-name (in lower\-case): it is the personal configuration file for the named service\&.
+More flexible than the single configuration file is it to configure libpam via the contents of
+pam\&.d
+directories\&. In this case the directories are filled with files each of which has a filename equal to a service\-name (in lower\-case): it is the personal configuration file for the named service\&.
 .PP
-The syntax of each file in /etc/pam\&.d/ is similar to that of the
+Vendor\-supplied PAM configuration files might be installed in the system directory
+/usr/lib/pam\&.d/
+or a configurable vendor specific directory instead of the machine configuration directory
+/etc/pam\&.d/\&. If no machine configuration file is found, the vendor\-supplied file is used\&. All files in
+/etc/pam\&.d/
+override files with the same name in other directories\&.
+.PP
+The syntax of each file in pam\&.d is similar to that of the
 /etc/pam\&.conf
 file and is made up of lines of the following form:
 .sp
@@ -375,6 +385,30 @@ The only difference being that the service\-name is not present\&. The service\-
 contains the configuration for the
 \fBlogin\fR
 service\&.
+.SH "FILES"
+.PP
+/etc/pam\&.conf
+.RS 4
+the configuration file
+.RE
+.PP
+/etc/pam\&.d
+.RS 4
+the
+\fBLinux\-PAM\fR
+configuration directory\&. Generally, if this directory is present, the
+/etc/pam\&.conf
+file is ignored\&.
+.RE
+.PP
+/usr/lib/pam\&.d
+.RS 4
+the
+\fBLinux\-PAM\fR
+vendor configuration directory\&. Files in
+/etc/pam\&.d
+override files with the same name in this directory\&.
+.RE
 .SH "SEE ALSO"
 .PP
 \fBpam\fR(3),

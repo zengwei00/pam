@@ -1,13 +1,10 @@
-<?xml version="1.0" encoding='UTF-8'?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-        "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
-
-<refentry id="namespace.conf">
+<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="namespace.conf">
 
   <refmeta>
     <refentrytitle>namespace.conf</refentrytitle>
     <manvolnum>5</manvolnum>
-    <refmiscinfo class="sectdesc">Linux-PAM Manual</refmiscinfo>
+    <refmiscinfo class="source">Linux-PAM</refmiscinfo>
+    <refmiscinfo class="manual">Linux-PAM Manual</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -16,7 +13,7 @@
   </refnamediv>
 
 
-  <refsect1 id='namespace.conf-description'>
+  <refsect1 xml:id="namespace.conf-description">
     <title>DESCRIPTION</title>
 
     <para>
@@ -30,11 +27,27 @@
       directory path and the instance directory path as its arguments.
     </para>
 
-    <para>
+    <para condition="without_vendordir">
       The <filename>/etc/security/namespace.conf</filename> file specifies
       which directories are polyinstantiated, how they are polyinstantiated,
       how instance directories would be named, and any users for whom
       polyinstantiation would not be performed.
+    </para>
+
+    <para condition="with_vendordir">
+      The <filename>/etc/security/namespace.conf</filename> file
+      ( or <filename>%vendordir%/security/namespace.conf</filename> if it does
+      not exist) specifies which directories are polyinstantiated, how they are
+      polyinstantiated, how instance directories would be named, and any users
+      for whom polyinstantiation would not be performed.
+      Then individual <filename>*.conf</filename> files from the
+      <filename>/etc/security/namespace.d/</filename> and
+      <filename>%vendordir%/security/namespace.d</filename> directories are taken too.
+      If <filename>/etc/security/namespace.d/@filename@.conf</filename> exists, then
+      <filename>%vendordir%/security/namespace.d/@filename@.conf</filename> will not be used.
+      All <filename>namespace.d/*.conf</filename> files are sorted by their
+      <filename>@filename@.conf</filename> in lexicographic order regardless of which
+      of the directories they reside in.
     </para>
 
     <para>
@@ -159,7 +172,7 @@
 
   </refsect1>
 
-  <refsect1 id="namespace.conf-examples">
+  <refsect1 xml:id="namespace.conf-examples">
     <title>EXAMPLES</title>
     <para>
       These are some example lines which might be specified in
@@ -204,7 +217,7 @@
 
   </refsect1>
 
-  <refsect1 id="namespace.conf-see_also">
+  <refsect1 xml:id="namespace.conf-see_also">
     <title>SEE ALSO</title>
     <para>
       <citerefentry><refentrytitle>pam_namespace</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
@@ -213,7 +226,7 @@
     </para>
   </refsect1>
 
-  <refsect1 id="namespace.conf-author">
+  <refsect1 xml:id="namespace.conf-author">
     <title>AUTHORS</title>
     <para>
       The namespace.conf manual page was written by Janak Desai &lt;janak@us.ibm.com&gt;.

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_nologin
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_NOLOGIN" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_NOLOGIN" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -41,7 +41,7 @@ or
 exists\&. The contents of the file are displayed to the user\&. The pam_nologin module has no effect on the root user\*(Aqs ability to log in\&.
 .SH "OPTIONS"
 .PP
-\fBfile=\fR\fB\fI/path/nologin\fR\fR
+file=/path/nologin
 .RS 4
 Use this file instead the default
 /var/run/nologin
@@ -49,7 +49,7 @@ or
 /etc/nologin\&.
 .RE
 .PP
-\fBsuccessok\fR
+successok
 .RS 4
 Return PAM_SUCCESS if no file exists, the default is PAM_IGNORE\&.
 .RE

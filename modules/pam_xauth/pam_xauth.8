@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_xauth
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_XAUTH" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_XAUTH" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -76,12 +76,12 @@ Both the import and export files support wildcards (such as
 \fI*\fR)\&. Both the import and export files can be empty, signifying that no users are allowed\&.
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBxauthpath=\fR\fB\fI/path/to/xauth\fR\fR
+xauthpath=/path/to/xauth
 .RS 4
 Specify the path the xauth program (it is expected in
 /usr/X11R6/bin/xauth,
@@ -90,12 +90,12 @@ Specify the path the xauth program (it is expected in
 by default)\&.
 .RE
 .PP
-\fBsystemuser=\fR\fB\fIUID\fR\fR
+systemuser=UID
 .RS 4
 Specify the highest UID which will be assumed to belong to a "system" user\&. pam_xauth will refuse to forward credentials to users with UID less than or equal to this number, except for root and the "targetuser", if specified\&.
 .RE
 .PP
-\fBtargetuser=\fR\fB\fIUID\fR\fR
+targetuser=UID
 .RS 4
 Specify a single target UID which is exempt from the systemuser check\&.
 .RE
