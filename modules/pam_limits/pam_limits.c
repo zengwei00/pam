@@ -13,7 +13,7 @@
  * See end for Copyright information
  */
 
-#if !defined(linux) && !defined(__linux)
+#ifndef __linux__
 #warning THIS CODE IS KNOWN TO WORK ONLY ON LINUX !!!
 #endif
 
@@ -45,6 +45,10 @@
 
 #ifdef HAVE_LIBAUDIT
 #include <libaudit.h>
+#endif
+
+#ifndef PR_SET_NO_NEW_PRIVS
+# define PR_SET_NO_NEW_PRIVS 38 /* from <linux/prctl.h> */
 #endif
 
 /* Module defines */
@@ -119,9 +123,14 @@ struct pam_limit_s {
 #define PAM_SET_ALL         0x0010
 
 /* Limits from globbed files. */
-#define LIMITS_CONF_GLOB LIMITS_FILE_DIR
+#define LIMITS_CONF_GLOB	(LIMITS_FILE_DIR "/*.conf")
 
-#define CONF_FILE (pl->conf_file != NULL)?pl->conf_file:LIMITS_FILE
+#define LIMITS_FILE	(SCONFIGDIR "/limits.conf")
+
+#ifdef VENDOR_SCONFIGDIR
+#define VENDOR_LIMITS_FILE (VENDOR_SCONFIGDIR "/limits.conf")
+#define VENDOR_LIMITS_CONF_GLOB  (VENDOR_SCONFIGDIR "/limits.d/*.conf")
+#endif
 
 static int
 _pam_parse (const pam_handle_t *pamh, int argc, const char **argv,
@@ -274,8 +283,8 @@ check_logins (pam_handle_t *pamh, const char *name, int limit, int ctrl,
 	}
         if (!pl->flag_numsyslogins) {
 	    char user[sizeof(ut->UT_USER) + 1];
-	    user[0] = '\0';
-	    strncat(user, ut->UT_USER, sizeof(ut->UT_USER));
+	    memcpy(user, ut->UT_USER, sizeof(ut->UT_USER));
+	    user[sizeof(ut->UT_USER)] = '\0';
 
 	    if (((pl->login_limit_def == LIMITS_DEF_USER)
 	         || (pl->login_limit_def == LIMITS_DEF_GROUP)
@@ -806,18 +815,22 @@ parse_uid_range(pam_handle_t *pamh, const char *domain,
 
 static int
 parse_config_file(pam_handle_t *pamh, const char *uname, uid_t uid, gid_t gid,
-			     int ctrl, struct pam_limit_s *pl)
+		  int ctrl, struct pam_limit_s *pl, const int conf_file_set_by_user)
 {
     FILE *fil;
     char buf[LINE_LENGTH];
 
-    /* check for the LIMITS_FILE */
+    /* check for the conf_file */
     if (ctrl & PAM_DEBUG_ARG)
-        pam_syslog(pamh, LOG_DEBUG, "reading settings from '%s'", CONF_FILE);
-    fil = fopen(CONF_FILE, "r");
+        pam_syslog(pamh, LOG_DEBUG, "reading settings from '%s'", pl->conf_file);
+    fil = fopen(pl->conf_file, "r");
     if (fil == NULL) {
-        pam_syslog (pamh, LOG_WARNING,
-		    "cannot read settings from %s: %m", CONF_FILE);
+        if (errno == ENOENT && !conf_file_set_by_user)
+            return PAM_SUCCESS; /* file is not there and it has not been set by the conf= argument */
+
+        pam_syslog(pamh, LOG_WARNING,
+                   "cannot read settings from %s: %s", pl->conf_file,
+                   strerror(errno));
         return PAM_SERVICE_ERR;
     }
 
@@ -1074,33 +1087,132 @@ static int setup_limits(pam_handle_t *pamh,
     return retval;
 }
 
+/* --- evaluting all files in VENDORDIR/security/limits.d and /etc/security/limits.d --- */
+static const char *
+base_name(const char *path)
+{
+    const char *base = strrchr(path, '/');
+    return base ? base+1 : path;
+}
+
+static int
+compare_filename(const void *a, const void *b)
+{
+	return strcmp(base_name(* (const char * const *) a),
+		      base_name(* (const char * const *) b));
+}
+
+/* Evaluating a list of files which have to be parsed in the right order:
+ *
+ * - If etc/security/limits.d/@filename@.conf exists, then
+ *   %vendordir%/security/limits.d/@filename@.conf should not be used.
+ * - All files in both limits.d directories are sorted by their @filename@.conf in
+ *   lexicographic order regardless of which of the directories they reside in. */
+static char **
+read_limits_dir(pam_handle_t *pamh)
+{
+	glob_t globbuf;
+	size_t i=0;
+	int glob_rv = glob(LIMITS_CONF_GLOB, GLOB_ERR | GLOB_NOSORT, NULL, &globbuf);
+	char **file_list;
+	size_t file_list_size = glob_rv == 0 ? globbuf.gl_pathc : 0;
+
+#ifdef VENDOR_LIMITS_CONF_GLOB
+	glob_t globbuf_vendor;
+	int glob_rv_vendor = glob(VENDOR_LIMITS_CONF_GLOB, GLOB_ERR | GLOB_NOSORT, NULL, &globbuf_vendor);
+	if (glob_rv_vendor == 0)
+	    file_list_size += globbuf_vendor.gl_pathc;
+#endif
+	file_list = malloc((file_list_size + 1) * sizeof(char*));
+	if (file_list == NULL) {
+	    pam_syslog(pamh, LOG_ERR, "Cannot allocate memory for file list: %m");
+#ifdef VENDOR_ACCESS_CONF_GLOB
+            if (glob_rv_vendor == 0)
+                globfree(&globbuf_vendor);
+#endif
+            if (glob_rv == 0)
+                globfree(&globbuf);
+	    return NULL;
+	}
+
+	if (glob_rv == 0) {
+	    for (i = 0; i < globbuf.gl_pathc; i++) {
+	        file_list[i] = strdup(globbuf.gl_pathv[i]);
+		if (file_list[i] == NULL) {
+		    pam_syslog(pamh, LOG_ERR, "strdup failed: %m");
+		    break;
+		}
+	    }
+	}
+#ifdef VENDOR_LIMITS_CONF_GLOB
+	if (glob_rv_vendor == 0) {
+	    for (size_t j = 0; j < globbuf_vendor.gl_pathc; j++) {
+		if (glob_rv == 0 && globbuf.gl_pathc > 0) {
+		    int double_found = 0;
+		    for (size_t k = 0; k < globbuf.gl_pathc; k++) {
+			if (strcmp(base_name(globbuf.gl_pathv[k]),
+				   base_name(globbuf_vendor.gl_pathv[j])) == 0) {
+				double_found = 1;
+				break;
+			}
+		    }
+		    if (double_found)
+			continue;
+		}
+		file_list[i] = strdup(globbuf_vendor.gl_pathv[j]);
+		if (file_list[i] == NULL) {
+		    pam_syslog(pamh, LOG_ERR, "strdup failed: %m");
+		    break;
+		}
+		i++;
+	    }
+	    globfree(&globbuf_vendor);
+	}
+#endif
+	file_list[i] = NULL;
+	qsort(file_list, i, sizeof(char *), compare_filename);
+        if (glob_rv == 0)
+	    globfree(&globbuf);
+
+	return file_list;
+}
+
 /* now the session stuff */
 int
 pam_sm_open_session (pam_handle_t *pamh, int flags UNUSED,
 		     int argc, const char **argv)
 {
-    int retval;
-    int i;
-    int glob_rc;
+    int retval, i;
     char *user_name;
     struct passwd *pwd;
     int ctrl;
     struct pam_limit_s plstruct;
     struct pam_limit_s *pl = &plstruct;
-    glob_t globbuf;
-    const char *oldlocale;
 
     D(("called."));
 
     memset(pl, 0, sizeof(*pl));
-    memset(&globbuf, 0, sizeof(globbuf));
 
     ctrl = _pam_parse(pamh, argc, argv, pl);
     retval = pam_get_item( pamh, PAM_USER, (void*) &user_name );
     if ( user_name == NULL || retval != PAM_SUCCESS ) {
         pam_syslog(pamh, LOG_ERR, "open_session - error recovering username");
         return PAM_SESSION_ERR;
-     }
+    }
+
+    int conf_file_set_by_user = (pl->conf_file != NULL);
+    if (pl->conf_file == NULL) {
+        pl->conf_file = LIMITS_FILE;
+#ifdef VENDOR_LIMITS_FILE
+        /*
+         * Check whether LIMITS_FILE file is available.
+         * If it does not exist, fall back to VENDOR_LIMITS_FILE file.
+         */
+        struct stat buffer;
+        if (stat(pl->conf_file, &buffer) != 0 && errno == ENOENT)
+            pl->conf_file = VENDOR_LIMITS_FILE;
+#endif
+    }
 
     pwd = pam_modutil_getpwnam(pamh, user_name);
     if (!pwd) {
@@ -1116,46 +1228,39 @@ pam_sm_open_session (pam_handle_t *pamh, int flags UNUSED,
         return PAM_ABORT;
     }
 
-    retval = parse_config_file(pamh, pwd->pw_name, pwd->pw_uid, pwd->pw_gid, ctrl, pl);
+    retval = parse_config_file(pamh, pwd->pw_name, pwd->pw_uid, pwd->pw_gid,
+			       ctrl, pl, conf_file_set_by_user);
     if (retval == PAM_IGNORE) {
-	D(("the configuration file ('%s') has an applicable '<domain> -' entry", CONF_FILE));
+	D(("the configuration file ('%s') has an applicable '<domain> -' entry", pl->conf_file));
 	return PAM_SUCCESS;
     }
-    if (retval != PAM_SUCCESS || pl->conf_file != NULL)
+    if (retval != PAM_SUCCESS || conf_file_set_by_user)
 	/* skip reading limits.d if config file explicitly specified */
 	goto out;
 
     /* Read subsequent *.conf files, if they exist. */
-
-    /* set the LC_COLLATE so the sorting order doesn't depend
-	on system locale */
-
-    oldlocale = setlocale(LC_COLLATE, "C");
-    glob_rc = glob(LIMITS_CONF_GLOB, GLOB_ERR, NULL, &globbuf);
-
-    if (oldlocale != NULL)
-	setlocale (LC_COLLATE, oldlocale);
-
-    if (!glob_rc) {
-	/* Parse the *.conf files. */
-	for (i = 0; globbuf.gl_pathv[i] != NULL; i++) {
-	    pl->conf_file = globbuf.gl_pathv[i];
-	    retval = parse_config_file(pamh, pwd->pw_name, pwd->pw_uid, pwd->pw_gid, ctrl, pl);
-	    if (retval == PAM_IGNORE) {
-		D(("the configuration file ('%s') has an applicable '<domain> -' entry", pl->conf_file));
-		globfree(&globbuf);
-		return PAM_SUCCESS;
-	    }
-	    if (retval != PAM_SUCCESS)
-		goto out;
+    char **filename_list = read_limits_dir(pamh);
+    if (filename_list != NULL) {
+        for (i = 0; filename_list[i] != NULL; i++) {
+            pl->conf_file = filename_list[i];
+            retval = parse_config_file(pamh, pwd->pw_name, pwd->pw_uid, pwd->pw_gid, ctrl, pl, 0);
+            if (retval != PAM_SUCCESS)
+                break;
         }
+        for (i = 0; filename_list[i] != NULL; i++)
+            free(filename_list[i]);
+        free(filename_list);
+    }
+
+    if (retval == PAM_IGNORE) {
+        D(("the configuration file ('%s') has an applicable '<domain> -' entry", pl->conf_file));
+        return PAM_SUCCESS;
     }
 
 out:
-    globfree(&globbuf);
     if (retval != PAM_SUCCESS)
     {
-	pam_syslog(pamh, LOG_ERR, "error parsing the configuration file: '%s' ",CONF_FILE);
+	pam_syslog(pamh, LOG_ERR, "error parsing the configuration file: '%s' ", pl->conf_file);
 	return retval;
     }
 

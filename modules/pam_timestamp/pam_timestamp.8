@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_timestamp
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_TIMESTAMP" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_TIMESTAMP" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,33 +45,28 @@ When an application opens a session using
 directory for the user\&. When an application attempts to authenticate the user, a
 \fIpam_timestamp\fR
 will treat a sufficiently recent timestamp file as grounds for succeeding\&.
-.PP
-The default encryption hash is taken from the
-\fBHMAC_CRYPTO_ALGO\fR
-variable from
-\fI/etc/login\&.defs\fR\&.
 .SH "OPTIONS"
 .PP
-\fBtimestampdir=\fR\fB\fIdirectory\fR\fR
+timestampdir=directory
 .RS 4
 Specify an alternate directory where
 \fIpam_timestamp\fR
 creates timestamp files\&.
 .RE
 .PP
-\fBtimestamp_timeout=\fR\fB\fInumber\fR\fR
+timestamp_timeout=number
 .RS 4
 How long should
 \fIpam_timestamp\fR
 treat timestamp as valid after their last modification date (in seconds)\&. Default is 300 seconds\&.
 .RE
 .PP
-\fBverbose\fR
+verbose
 .RS 4
 Attempt to inform the user when access is granted\&.
 .RE
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Turns on debugging messages sent to
 \fBsyslog\fR(3)\&.

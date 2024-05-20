@@ -31,9 +31,9 @@ enforce_for_root
 
 remember=N
 
-    The last N passwords for each user are saved in /etc/security/opasswd. The
-    default is 10. Value of 0 makes the module to keep the existing contents of
-    the opasswd file unchanged.
+    The last N passwords for each user are saved. The default is 10. Value of 0
+    makes the module to keep the existing contents of the opasswd file
+    unchanged.
 
 retry=N
 
@@ -42,6 +42,20 @@ retry=N
 authtok_type=STRING
 
     See pam_get_authtok(3) for more details.
+
+file=/path/filename
+
+    Store password history in file /path/filename rather than the default
+    location. The default location is /etc/security/opasswd.
+
+conf=/path/to/config-file
+
+    Use another configuration file instead of the default /etc/security/
+    pwhistory.conf.
+
+The options for configuring the module behavior are described in the 
+pwhistory.conf(5) manual page. The options specified on the module command line
+override the values from the configuration file.
 
 EXAMPLES
 

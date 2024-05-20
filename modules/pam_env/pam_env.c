@@ -7,6 +7,9 @@
  */
 
 #define DEFAULT_ETC_ENVFILE     "/etc/environment"
+#ifdef VENDORDIR
+#define VENDOR_DEFAULT_ETC_ENVFILE (VENDORDIR "/environment")
+#endif
 #define DEFAULT_READ_ENVFILE    1
 
 #define DEFAULT_USER_ENVFILE    ".pam_environment"
@@ -25,6 +28,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef USE_ECONF
+#include <libeconf.h>
+#endif
 
 #include <security/pam_modules.h>
 #include <security/pam_modutil.h>
@@ -41,6 +47,11 @@ typedef struct var {
   char *override;
 } VAR;
 
+#define DEFAULT_CONF_FILE	(SCONFIGDIR "/pam_env.conf")
+#ifdef VENDOR_SCONFIGDIR
+#define VENDOR_DEFAULT_CONF_FILE (VENDOR_SCONFIGDIR "/pam_env.conf")
+#endif
+
 #define BUF_SIZE 8192
 #define MAX_ENV  8192
 
@@ -51,17 +62,19 @@ typedef struct var {
 #define UNDEFINE_VAR 102
 #define ILLEGAL_VAR  103
 
-static int  _assemble_line(FILE *, char *, int);
-static int  _parse_line(const pam_handle_t *, const char *, VAR *);
-static int  _check_var(pam_handle_t *, VAR *);           /* This is the real meat */
-static void _clean_var(VAR *);
-static int  _expand_arg(pam_handle_t *, char **);
-static const char * _pam_get_item_byname(pam_handle_t *, const char *);
-static int  _define_var(pam_handle_t *, int, VAR *);
-static int  _undefine_var(pam_handle_t *, int, VAR *);
-
 /* This is a special value used to designate an empty string */
 static char quote='\0';
+
+static void free_string_array(char **array)
+{
+    if (array == NULL)
+      return;
+    for (char **entry = array; *entry != NULL; ++entry) {
+      pam_overwrite_string(*entry);
+      free(*entry);
+    }
+    free(array);
+}
 
 /* argument parsing */
 
@@ -75,10 +88,10 @@ _pam_parse (const pam_handle_t *pamh, int argc, const char **argv,
     int ctrl=0;
 
     *user_envfile = DEFAULT_USER_ENVFILE;
-    *envfile = DEFAULT_ETC_ENVFILE;
+    *envfile = NULL;
     *readenv = DEFAULT_READ_ENVFILE;
     *user_readenv = DEFAULT_USER_READ_ENVFILE;
-    *conffile = DEFAULT_CONF_FILE;
+    *conffile = NULL;
 
     /* step through arguments */
     for (; argc-- > 0; ++argv) {
@@ -126,166 +139,155 @@ _pam_parse (const pam_handle_t *pamh, int argc, const char **argv,
     return ctrl;
 }
 
+#ifdef USE_ECONF
+
+#define ENVIRONMENT "environment"
+#define PAM_ENV "pam_env"
+
 static int
-_parse_config_file(pam_handle_t *pamh, int ctrl, const char *file)
+isDirectory(const char *path) {
+   struct stat statbuf;
+   if (stat(path, &statbuf) != 0)
+       return 0;
+   return S_ISDIR(statbuf.st_mode);
+}
+
+static int
+econf_read_file(const pam_handle_t *pamh, const char *filename, const char *delim,
+			   const char *name, const char *suffix, const char *subpath,
+			   char ***lines)
 {
-    int retval;
-    char buffer[BUF_SIZE];
-    FILE *conf;
-    VAR Var, *var=&Var;
+    econf_file *key_file = NULL;
+    econf_err error;
+    size_t key_number = 0;
+    char **keys = NULL;
+    const char *base_dir = "";
 
-    D(("Called."));
-
-    var->name=NULL; var->defval=NULL; var->override=NULL;
-
-    D(("Config file name is: %s", file));
-
-    /*
-     * Lets try to open the config file, parse it and process
-     * any variables found.
-     */
-
-    if ((conf = fopen(file,"r")) == NULL) {
-      pam_syslog(pamh, LOG_ERR, "Unable to open config file: %s: %m", file);
-      return PAM_IGNORE;
-    }
-
-    /* _pam_assemble_line will provide a complete line from the config file,
-     * with all comments removed and any escaped newlines fixed up
-     */
-
-    while (( retval = _assemble_line(conf, buffer, BUF_SIZE)) > 0) {
-      D(("Read line: %s", buffer));
-
-      if ((retval = _parse_line(pamh, buffer, var)) == GOOD_LINE) {
-	retval = _check_var(pamh, var);
-
-	if (DEFINE_VAR == retval) {
-	  retval = _define_var(pamh, ctrl, var);
-
-	} else if (UNDEFINE_VAR == retval) {
-	  retval = _undefine_var(pamh, ctrl, var);
+    if (filename != NULL) {
+      if (isDirectory(filename)) {
+	/* Set base directory which can be different from root */
+	D(("filename argument is a directory: %s", filename));
+	base_dir = filename;
+      } else {
+	/* Read only one file */
+	error = econf_readFile (&key_file, filename, delim, "#");
+	D(("File name is: %s", filename));
+	if (error != ECONF_SUCCESS) {
+	  pam_syslog(pamh, LOG_ERR, "Unable to open env file: %s: %s", filename,
+		     econf_errString(error));
+          if (error == ECONF_NOFILE)
+            return PAM_IGNORE;
+          else
+            return PAM_ABORT;
 	}
       }
-      if (PAM_SUCCESS != retval && ILLEGAL_VAR != retval
-	  && BAD_LINE != retval && PAM_BAD_ITEM != retval) break;
+    }
+    if (filename == NULL || base_dir[0] != '\0') {
+      /* Read and merge all setting in e.g. /usr/etc and /etc */
+      char *vendor_dir = NULL, *sysconf_dir;
+      if (subpath != NULL && subpath[0] != '\0') {
+#ifdef VENDORDIR
+	if (asprintf(&vendor_dir, "%s%s/%s/", base_dir, VENDORDIR, subpath) < 0) {
+	  pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+	  return PAM_BUF_ERR;
+	}
+#endif
+	if (asprintf(&sysconf_dir, "%s%s/%s/", base_dir, SYSCONFDIR, subpath) < 0) {
+	  pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+	  free(vendor_dir);
+	  return PAM_BUF_ERR;
+	}
+      } else {
+#ifdef VENDORDIR
+	if (asprintf(&vendor_dir, "%s%s/", base_dir, VENDORDIR) < 0) {
+	  pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+	  return PAM_BUF_ERR;
+	}
+#endif
+	if (asprintf(&sysconf_dir, "%s%s/", base_dir, SYSCONFDIR) < 0) {
+	  pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+	  free(vendor_dir);
+	  return PAM_BUF_ERR;
+	}
+      }
 
-      _clean_var(var);
+      D(("Read configuration from directory %s and %s", vendor_dir, sysconf_dir));
+      error = econf_readDirs (&key_file, vendor_dir, sysconf_dir, name, suffix,
+			      delim, "#");
+      free(vendor_dir);
+      free(sysconf_dir);
+      if (error != ECONF_SUCCESS) {
+        if (error == ECONF_NOFILE) {
+	  pam_syslog(pamh, LOG_ERR, "Configuration file not found: %s%s", name, suffix);
+          return PAM_IGNORE;
+        } else {
+          char *error_filename = NULL;
+          uint64_t error_line = 0;
 
-    }  /* while */
-
-    (void) fclose(conf);
-
-    /* tidy up */
-    _clean_var(var);        /* We could have got here prematurely,
-			     * this is safe though */
-    D(("Exit."));
-    return (retval != 0 ? PAM_ABORT : PAM_SUCCESS);
-}
-
-static int
-_parse_env_file(pam_handle_t *pamh, int ctrl, const char *file)
-{
-    int retval=PAM_SUCCESS, i, t;
-    char buffer[BUF_SIZE], *key, *mark;
-    FILE *conf;
-
-    D(("Env file name is: %s", file));
-
-    if ((conf = fopen(file,"r")) == NULL) {
-      pam_syslog(pamh, LOG_ERR, "Unable to open env file: %s: %m", file);
-      return PAM_IGNORE;
+          econf_errLocation(&error_filename, &error_line);
+          pam_syslog(pamh, LOG_ERR, "Unable to read configuration file %s line %ld: %s",
+                     error_filename,
+                     error_line,
+                     econf_errString(error));
+          free(error_filename);
+          return PAM_ABORT;
+	}
+      }
     }
 
-    while (_assemble_line(conf, buffer, BUF_SIZE) > 0) {
-	D(("Read line: %s", buffer));
-	key = buffer;
-
-	/* skip leading white space */
-	key += strspn(key, " \n\t");
-
-	/* skip blanks lines and comments */
-	if (key[0] == '#')
-	    continue;
-
-	/* skip over "export " if present so we can be compat with
-	   bash type declarations */
-	if (strncmp(key, "export ", (size_t) 7) == 0)
-	    key += 7;
-
-	/* now find the end of value */
-	mark = key;
-	while(mark[0] != '\n' && mark[0] != '#' && mark[0] != '\0')
-	    mark++;
-	if (mark[0] != '\0')
-	    mark[0] = '\0';
-
-       /*
-	* sanity check, the key must be alphanumeric
-	*/
-
-	if (key[0] == '=') {
-		pam_syslog(pamh, LOG_ERR,
-		           "missing key name '%s' in %s', ignoring",
-		           key, file);
-		continue;
-	}
-
-	for ( i = 0 ; key[i] != '=' && key[i] != '\0' ; i++ )
-	    if (!isalnum(key[i]) && key[i] != '_') {
-		pam_syslog(pamh, LOG_ERR,
-		           "non-alphanumeric key '%s' in %s', ignoring",
-		           key, file);
-		break;
-	    }
-	/* non-alphanumeric key, ignore this line */
-	if (key[i] != '=' && key[i] != '\0')
-	    continue;
-
-	/* now we try to be smart about quotes around the value,
-	   but not too smart, we can't get all fancy with escaped
-	   values like bash */
-	if (key[i] == '=' && (key[++i] == '\"' || key[i] == '\'')) {
-	    for ( t = i+1 ; key[t] != '\0' ; t++)
-		if (key[t] != '\"' && key[t] != '\'')
-		    key[i++] = key[t];
-		else if (key[t+1] != '\0')
-		    key[i++] = key[t];
-	    key[i] = '\0';
-	}
-
-	/* if this is a request to delete a variable, check that it's
-	   actually set first, so we don't get a vague error back from
-	   pam_putenv() */
-	for (i = 0; key[i] != '=' && key[i] != '\0'; i++);
-
-	if (key[i] == '\0' && !pam_getenv(pamh,key))
-	    continue;
-
-	/* set the env var, if it fails, we break out of the loop */
-	retval = pam_putenv(pamh, key);
-	if (retval != PAM_SUCCESS) {
-	    D(("error setting env \"%s\"", key));
-	    break;
-	} else if (ctrl & PAM_DEBUG_ARG) {
-	    pam_syslog(pamh, LOG_DEBUG,
-		       "pam_putenv(\"%s\")", key);
-	}
+    error = econf_getKeys(key_file, NULL, &key_number, &keys);
+    if (error != ECONF_SUCCESS && error != ECONF_NOKEY) {
+      pam_syslog(pamh, LOG_ERR, "Unable to read keys: %s",
+		 econf_errString(error));
+      econf_freeFile(key_file);
+      return PAM_ABORT;
     }
 
-    (void) fclose(conf);
+    *lines = malloc((key_number +1)* sizeof(char**));
+    if (*lines == NULL) {
+      pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+      econf_free(keys);
+      econf_freeFile(key_file);
+      return PAM_BUF_ERR;
+    }
 
-    /* tidy up */
-    D(("Exit."));
-    return retval;
+    (*lines)[key_number] = 0;
+
+    for (size_t i = 0; i < key_number; i++) {
+      char *val;
+
+      error = econf_getStringValue (key_file, NULL, keys[i], &val);
+      if (error != ECONF_SUCCESS) {
+	pam_syslog(pamh, LOG_ERR, "Unable to get string from key %s: %s",
+		   keys[i],
+		   econf_errString(error));
+      } else {
+        if (asprintf(&(*lines)[i],"%s%c%s", keys[i], delim[0], val) < 0) {
+	  pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+          econf_free(keys);
+          econf_freeFile(key_file);
+	  (*lines)[i] = NULL;
+	  free_string_array(*lines);
+	  free (val);
+	  return PAM_BUF_ERR;
+	}
+	free (val);
+      }
+    }
+
+    econf_free(keys);
+    econf_free(key_file);
+    return PAM_SUCCESS;
 }
+
+#else
 
 /*
  * This is where we read a line of the PAM config file. The line may be
  * preceded by lines of comments and also extended with "\\\n"
  */
-
-static int _assemble_line(FILE *f, char *buffer, int buf_len)
+static int
+_assemble_line(FILE *f, char *buffer, int buf_len)
 {
     char *p = buffer;
     char *s, *os;
@@ -373,8 +375,57 @@ static int _assemble_line(FILE *f, char *buffer, int buf_len)
     return used;
 }
 
+static int read_file(const pam_handle_t *pamh, const char*filename, char ***lines)
+{
+    FILE *conf;
+    char buffer[BUF_SIZE];
+
+    D(("Parsed file name is: %s", filename));
+
+    if ((conf = fopen(filename,"r")) == NULL) {
+      pam_syslog(pamh, LOG_ERR, "Unable to open env file: %s", filename);
+      return PAM_IGNORE;
+    }
+
+    size_t i = 0;
+    *lines = malloc((i + 1)* sizeof(char**));
+    if (*lines == NULL) {
+      pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+      (void) fclose(conf);
+      return PAM_BUF_ERR;
+    }
+    (*lines)[i] = 0;
+    while (_assemble_line(conf, buffer, BUF_SIZE) > 0) {
+      char **tmp = NULL;
+      D(("Read line: %s", buffer));
+      tmp = realloc(*lines, (++i + 1) * sizeof(char**));
+      if (tmp == NULL) {
+	pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+	(void) fclose(conf);
+	free_string_array(*lines);
+	pam_overwrite_array(buffer);
+	return PAM_BUF_ERR;
+      }
+      *lines = tmp;
+      (*lines)[i-1] = strdup(buffer);
+      if ((*lines)[i-1] == NULL) {
+        pam_syslog(pamh, LOG_ERR, "Cannot allocate memory.");
+        (void) fclose(conf);
+        free_string_array(*lines);
+        pam_overwrite_array(buffer);
+        return PAM_BUF_ERR;
+      }
+      (*lines)[i] = 0;
+    }
+
+    (void) fclose(conf);
+    pam_overwrite_array(buffer);
+    return PAM_SUCCESS;
+}
+#endif
+
 static int
-_parse_line (const pam_handle_t *pamh, const char *buffer, VAR *var)
+_parse_line(const pam_handle_t *pamh, const char *buffer, VAR *var)
 {
   /*
    * parse buffer into var, legal syntax is
@@ -454,7 +505,8 @@ _parse_line (const pam_handle_t *pamh, const char *buffer, VAR *var)
       }
       (void)strncpy(*valptr,ptr,length);
       (*valptr)[length]='\0';
-    } else if (quoteflg--) {
+    } else if (quoteflg) {
+      quoteflg--;
       *valptr = &quote;      /* a quick hack to handle the empty string */
     }
     ptr = tmpptr;         /* Start the search where we stopped */
@@ -469,7 +521,203 @@ _parse_line (const pam_handle_t *pamh, const char *buffer, VAR *var)
   return GOOD_LINE;
 }
 
-static int _check_var(pam_handle_t *pamh, VAR *var)
+static const char *
+_pam_get_item_byname(pam_handle_t *pamh, const char *name)
+{
+  /*
+   * This function just allows me to use names as given in the config
+   * file and translate them into the appropriate PAM_ITEM macro
+   */
+
+  int item;
+  const void *itemval;
+
+  D(("Called."));
+  if (strcmp(name, "PAM_USER") == 0 || strcmp(name, "HOME") == 0 || strcmp(name, "SHELL") == 0) {
+    item = PAM_USER;
+  } else if (strcmp(name, "PAM_USER_PROMPT") == 0) {
+    item = PAM_USER_PROMPT;
+  } else if (strcmp(name, "PAM_TTY") == 0) {
+    item = PAM_TTY;
+  } else if (strcmp(name, "PAM_RUSER") == 0) {
+    item = PAM_RUSER;
+  } else if (strcmp(name, "PAM_RHOST") == 0) {
+    item = PAM_RHOST;
+  } else {
+    D(("Unknown PAM_ITEM: <%s>", name));
+    pam_syslog (pamh, LOG_ERR, "Unknown PAM_ITEM: <%s>", name);
+    return NULL;
+  }
+
+  if (pam_get_item(pamh, item, &itemval) != PAM_SUCCESS) {
+    D(("pam_get_item failed"));
+    return NULL;     /* let pam_get_item() log the error */
+  }
+
+  if (itemval && (strcmp(name, "HOME") == 0 || strcmp(name, "SHELL") == 0)) {
+    struct passwd *user_entry;
+    user_entry = pam_modutil_getpwnam (pamh, itemval);
+    if (!user_entry) {
+      pam_syslog(pamh, LOG_ERR, "No such user!?");
+      return NULL;
+    }
+    return (strcmp(name, "SHELL") == 0) ?
+      user_entry->pw_shell :
+      user_entry->pw_dir;
+  }
+
+  D(("Exit."));
+  return itemval;
+}
+
+static int
+_expand_arg(pam_handle_t *pamh, char **value)
+{
+  const char *orig=*value, *tmpptr=NULL;
+  char *ptr;       /*
+		    * Sure would be nice to use tmpptr but it needs to be
+		    * a constant so that the compiler will shut up when I
+		    * call pam_getenv and _pam_get_item_byname -- sigh
+		    */
+
+  /* No unexpanded variable can be bigger than BUF_SIZE */
+  char type, tmpval[BUF_SIZE];
+
+  /* I know this shouldn't be hard-coded but it's so much easier this way */
+  char tmp[MAX_ENV] = {};
+  size_t idx = 0;
+
+  /*
+   * (possibly non-existent) environment variables can be used as values
+   * by prepending a "$" and wrapping in {} (ie: ${HOST}), can escape with "\"
+   * (possibly non-existent) PAM items can be used as values
+   * by prepending a "@" and wrapping in {} (ie: @{PAM_RHOST}, can escape
+   *
+   */
+  D(("Expanding <%s>",orig));
+  while (*orig) {     /* while there is some input to deal with */
+    if ('\\' == *orig) {
+      ++orig;
+      if ('$' != *orig && '@' != *orig) {
+	D(("Unrecognized escaped character: <%c> - ignoring", *orig));
+	pam_syslog(pamh, LOG_ERR,
+		   "Unrecognized escaped character: <%c> - ignoring",
+		   *orig);
+      } else if (idx + 1 < MAX_ENV) {
+	tmp[idx++] = *orig++;        /* Note the increment */
+      } else {
+	/* is it really a good idea to try to log this? */
+	D(("Variable buffer overflow: <%s> + <%s>", tmp, tmpptr));
+	pam_syslog (pamh, LOG_ERR, "Variable buffer overflow: <%s> + <%s>",
+		 tmp, tmpptr);
+	goto buf_err;
+      }
+      continue;
+    }
+    if ('$' == *orig || '@' == *orig) {
+      if ('{' != *(orig+1)) {
+	D(("Expandable variables must be wrapped in {}"
+	   " <%s> - ignoring", orig));
+	pam_syslog(pamh, LOG_ERR, "Expandable variables must be wrapped in {}"
+		 " <%s> - ignoring", orig);
+	if (idx + 1 < MAX_ENV) {
+	  tmp[idx++] = *orig++;        /* Note the increment */
+	}
+	continue;
+      } else {
+	D(("Expandable argument: <%s>", orig));
+	type = *orig;
+	orig+=2;     /* skip the ${ or @{ characters */
+	ptr = strchr(orig, '}');
+	if (ptr) {
+	  *ptr++ = '\0';
+	} else {
+	  D(("Unterminated expandable variable: <%s>", orig-2));
+	  pam_syslog(pamh, LOG_ERR,
+		     "Unterminated expandable variable: <%s>", orig-2);
+	  goto abort_err;
+	}
+	strncpy(tmpval, orig, sizeof(tmpval));
+	tmpval[sizeof(tmpval)-1] = '\0';
+	orig=ptr;
+	/*
+	 * so, we know we need to expand tmpval, it is either
+	 * an environment variable or a PAM_ITEM. type will tell us which
+	 */
+	switch (type) {
+
+	case '$':
+	  D(("Expanding env var: <%s>",tmpval));
+	  tmpptr = pam_getenv(pamh, tmpval);
+	  D(("Expanded to <%s>", tmpptr));
+	  break;
+
+	case '@':
+	  D(("Expanding pam item: <%s>",tmpval));
+	  tmpptr = _pam_get_item_byname(pamh, tmpval);
+	  D(("Expanded to <%s>", tmpptr));
+	  break;
+
+	default:
+	  D(("Impossible error, type == <%c>", type));
+	  pam_syslog(pamh, LOG_CRIT, "Impossible error, type == <%c>", type);
+	  goto abort_err;
+	}         /* switch */
+
+	if (tmpptr) {
+	  size_t len = strlen(tmpptr);
+	  if (idx + len < MAX_ENV) {
+	    strcpy(tmp + idx, tmpptr);
+	    idx += len;
+	  } else {
+	    /* is it really a good idea to try to log this? */
+	    D(("Variable buffer overflow: <%s> + <%s>", tmp, tmpptr));
+	    pam_syslog (pamh, LOG_ERR,
+			"Variable buffer overflow: <%s> + <%s>", tmp, tmpptr);
+	    goto buf_err;
+	  }
+	}
+      }           /* if ('{' != *orig++) */
+    } else {      /* if ( '$' == *orig || '@' == *orig) */
+      if (idx + 1 < MAX_ENV) {
+	tmp[idx++] = *orig++;        /* Note the increment */
+      } else {
+	/* is it really a good idea to try to log this? */
+	D(("Variable buffer overflow: <%s> + <%s>", tmp, tmpptr));
+	pam_syslog(pamh, LOG_ERR,
+		   "Variable buffer overflow: <%s> + <%s>", tmp, tmpptr);
+	goto buf_err;
+      }
+    }
+  }              /* for (;*orig;) */
+
+  if (idx > strlen(*value)) {
+    free(*value);
+    if ((*value = malloc(idx + 1)) == NULL) {
+      D(("Couldn't malloc %d bytes for expanded var", idx + 1));
+      pam_syslog (pamh, LOG_CRIT, "Couldn't malloc %lu bytes for expanded var",
+	       (unsigned long)idx+1);
+      goto buf_err;
+    }
+  }
+  strcpy(*value, tmp);
+  pam_overwrite_array(tmp);
+  pam_overwrite_array(tmpval);
+  D(("Exit."));
+
+  return PAM_SUCCESS;
+buf_err:
+  pam_overwrite_array(tmp);
+  pam_overwrite_array(tmpval);
+  return PAM_BUF_ERR;
+abort_err:
+  pam_overwrite_array(tmp);
+  pam_overwrite_array(tmpval);
+  return PAM_ABORT;
+}
+
+static int
+_check_var(pam_handle_t *pamh, VAR *var)
 {
   /*
    * Examine the variable and determine what action to take.
@@ -537,195 +785,30 @@ static int _check_var(pam_handle_t *pamh, VAR *var)
   return retval;
 }
 
-static int _expand_arg(pam_handle_t *pamh, char **value)
+static void
+_clean_var(VAR *var)
 {
-  const char *orig=*value, *tmpptr=NULL;
-  char *ptr;       /*
-		    * Sure would be nice to use tmpptr but it needs to be
-		    * a constant so that the compiler will shut up when I
-		    * call pam_getenv and _pam_get_item_byname -- sigh
-		    */
-
-  /* No unexpanded variable can be bigger than BUF_SIZE */
-  char type, tmpval[BUF_SIZE];
-
-  /* I know this shouldn't be hard-coded but it's so much easier this way */
-  char tmp[MAX_ENV];
-  size_t idx;
-
-  D(("Remember to initialize tmp!"));
-  memset(tmp, 0, MAX_ENV);
-  idx = 0;
-
-  /*
-   * (possibly non-existent) environment variables can be used as values
-   * by prepending a "$" and wrapping in {} (ie: ${HOST}), can escape with "\"
-   * (possibly non-existent) PAM items can be used as values
-   * by prepending a "@" and wrapping in {} (ie: @{PAM_RHOST}, can escape
-   *
-   */
-  D(("Expanding <%s>",orig));
-  while (*orig) {     /* while there is some input to deal with */
-    if ('\\' == *orig) {
-      ++orig;
-      if ('$' != *orig && '@' != *orig) {
-	D(("Unrecognized escaped character: <%c> - ignoring", *orig));
-	pam_syslog(pamh, LOG_ERR,
-		   "Unrecognized escaped character: <%c> - ignoring",
-		   *orig);
-      } else if (idx + 1 < MAX_ENV) {
-	tmp[idx++] = *orig++;        /* Note the increment */
-      } else {
-	/* is it really a good idea to try to log this? */
-	D(("Variable buffer overflow: <%s> + <%s>", tmp, tmpptr));
-	pam_syslog (pamh, LOG_ERR, "Variable buffer overflow: <%s> + <%s>",
-		 tmp, tmpptr);
-	return PAM_BUF_ERR;
-      }
-      continue;
+    if (var->name) {
+      pam_overwrite_string(var->name);
+      free(var->name);
     }
-    if ('$' == *orig || '@' == *orig) {
-      if ('{' != *(orig+1)) {
-	D(("Expandable variables must be wrapped in {}"
-	   " <%s> - ignoring", orig));
-	pam_syslog(pamh, LOG_ERR, "Expandable variables must be wrapped in {}"
-		 " <%s> - ignoring", orig);
-	if (idx + 1 < MAX_ENV) {
-	  tmp[idx++] = *orig++;        /* Note the increment */
-	}
-	continue;
-      } else {
-	D(("Expandable argument: <%s>", orig));
-	type = *orig;
-	orig+=2;     /* skip the ${ or @{ characters */
-	ptr = strchr(orig, '}');
-	if (ptr) {
-	  *ptr++ = '\0';
-	} else {
-	  D(("Unterminated expandable variable: <%s>", orig-2));
-	  pam_syslog(pamh, LOG_ERR,
-		     "Unterminated expandable variable: <%s>", orig-2);
-	  return PAM_ABORT;
-	}
-	strncpy(tmpval, orig, sizeof(tmpval));
-	tmpval[sizeof(tmpval)-1] = '\0';
-	orig=ptr;
-	/*
-	 * so, we know we need to expand tmpval, it is either
-	 * an environment variable or a PAM_ITEM. type will tell us which
-	 */
-	switch (type) {
-
-	case '$':
-	  D(("Expanding env var: <%s>",tmpval));
-	  tmpptr = pam_getenv(pamh, tmpval);
-	  D(("Expanded to <%s>", tmpptr));
-	  break;
-
-	case '@':
-	  D(("Expanding pam item: <%s>",tmpval));
-	  tmpptr = _pam_get_item_byname(pamh, tmpval);
-	  D(("Expanded to <%s>", tmpptr));
-	  break;
-
-	default:
-	  D(("Impossible error, type == <%c>", type));
-	  pam_syslog(pamh, LOG_CRIT, "Impossible error, type == <%c>", type);
-	  return PAM_ABORT;
-	}         /* switch */
-
-	if (tmpptr) {
-	  size_t len = strlen(tmpptr);
-	  if (idx + len < MAX_ENV) {
-	    strcpy(tmp + idx, tmpptr);
-	    idx += len;
-	  } else {
-	    /* is it really a good idea to try to log this? */
-	    D(("Variable buffer overflow: <%s> + <%s>", tmp, tmpptr));
-	    pam_syslog (pamh, LOG_ERR,
-			"Variable buffer overflow: <%s> + <%s>", tmp, tmpptr);
-	    return PAM_BUF_ERR;
-	  }
-	}
-      }           /* if ('{' != *orig++) */
-    } else {      /* if ( '$' == *orig || '@' == *orig) */
-      if (idx + 1 < MAX_ENV) {
-	tmp[idx++] = *orig++;        /* Note the increment */
-      } else {
-	/* is it really a good idea to try to log this? */
-	D(("Variable buffer overflow: <%s> + <%s>", tmp, tmpptr));
-	pam_syslog(pamh, LOG_ERR,
-		   "Variable buffer overflow: <%s> + <%s>", tmp, tmpptr);
-	return PAM_BUF_ERR;
-      }
+    if (var->defval && (&quote != var->defval)) {
+      pam_overwrite_string(var->defval);
+      free(var->defval);
     }
-  }              /* for (;*orig;) */
-
-  if (idx > strlen(*value)) {
-    free(*value);
-    if ((*value = malloc(idx + 1)) == NULL) {
-      D(("Couldn't malloc %d bytes for expanded var", idx + 1));
-      pam_syslog (pamh, LOG_CRIT, "Couldn't malloc %lu bytes for expanded var",
-	       (unsigned long)idx+1);
-      return PAM_BUF_ERR;
+    if (var->override && (&quote != var->override)) {
+      pam_overwrite_string(var->override);
+      free(var->override);
     }
-  }
-  strcpy(*value, tmp);
-  memset(tmp, '\0', sizeof(tmp));
-  D(("Exit."));
-
-  return PAM_SUCCESS;
+    var->name = NULL;
+    var->value = NULL;    /* never has memory specific to it */
+    var->defval = NULL;
+    var->override = NULL;
+    return;
 }
 
-static const char * _pam_get_item_byname(pam_handle_t *pamh, const char *name)
-{
-  /*
-   * This function just allows me to use names as given in the config
-   * file and translate them into the appropriate PAM_ITEM macro
-   */
-
-  int item;
-  const void *itemval;
-
-  D(("Called."));
-  if (strcmp(name, "PAM_USER") == 0 || strcmp(name, "HOME") == 0 || strcmp(name, "SHELL") == 0) {
-    item = PAM_USER;
-  } else if (strcmp(name, "PAM_USER_PROMPT") == 0) {
-    item = PAM_USER_PROMPT;
-  } else if (strcmp(name, "PAM_TTY") == 0) {
-    item = PAM_TTY;
-  } else if (strcmp(name, "PAM_RUSER") == 0) {
-    item = PAM_RUSER;
-  } else if (strcmp(name, "PAM_RHOST") == 0) {
-    item = PAM_RHOST;
-  } else {
-    D(("Unknown PAM_ITEM: <%s>", name));
-    pam_syslog (pamh, LOG_ERR, "Unknown PAM_ITEM: <%s>", name);
-    return NULL;
-  }
-
-  if (pam_get_item(pamh, item, &itemval) != PAM_SUCCESS) {
-    D(("pam_get_item failed"));
-    return NULL;     /* let pam_get_item() log the error */
-  }
-
-  if (itemval && (strcmp(name, "HOME") == 0 || strcmp(name, "SHELL") == 0)) {
-    struct passwd *user_entry;
-    user_entry = pam_modutil_getpwnam (pamh, itemval);
-    if (!user_entry) {
-      pam_syslog(pamh, LOG_ERR, "No such user!?");
-      return NULL;
-    }
-    return (strcmp(name, "SHELL") == 0) ?
-      user_entry->pw_shell :
-      user_entry->pw_dir;
-  }
-
-  D(("Exit."));
-  return itemval;
-}
-
-static int _define_var(pam_handle_t *pamh, int ctrl, VAR *var)
+static int
+_define_var(pam_handle_t *pamh, int ctrl, VAR *var)
 {
   /* We have a variable to define, this is a simple function */
 
@@ -747,7 +830,8 @@ static int _define_var(pam_handle_t *pamh, int ctrl, VAR *var)
   return retval;
 }
 
-static int _undefine_var(pam_handle_t *pamh, int ctrl, VAR *var)
+static int
+_undefine_var(pam_handle_t *pamh, int ctrl, VAR *var)
 {
   /* We have a variable to undefine, this is a simple function */
 
@@ -758,25 +842,175 @@ static int _undefine_var(pam_handle_t *pamh, int ctrl, VAR *var)
   return pam_putenv(pamh, var->name);
 }
 
-static void   _clean_var(VAR *var)
+static int
+_parse_config_file(pam_handle_t *pamh, int ctrl, const char *file)
 {
-    if (var->name) {
-      free(var->name);
+    int retval;
+    VAR Var, *var=&Var;
+    char **conf_list = NULL;
+
+    var->name=NULL; var->defval=NULL; var->override=NULL;
+
+    D(("Called."));
+
+#ifdef USE_ECONF
+    /* If "file" is not NULL, only this file will be parsed. */
+    retval = econf_read_file(pamh, file, " \t", PAM_ENV, ".conf", "security", &conf_list);
+#else
+    /* Only one file will be parsed. So, file has to be set. */
+    if (file == NULL) /* No filename has been set via argv. */
+      file = DEFAULT_CONF_FILE;
+#ifdef VENDOR_DEFAULT_CONF_FILE
+    /*
+    * Check whether file is available.
+    * If it does not exist, fall back to VENDOR_DEFAULT_CONF_FILE file.
+    */
+    struct stat stat_buffer;
+    if (stat(file, &stat_buffer) != 0 && errno == ENOENT) {
+      file = VENDOR_DEFAULT_CONF_FILE;
     }
-    if (var->defval && (&quote != var->defval)) {
-      free(var->defval);
-    }
-    if (var->override && (&quote != var->override)) {
-      free(var->override);
-    }
-    var->name = NULL;
-    var->value = NULL;    /* never has memory specific to it */
-    var->defval = NULL;
-    var->override = NULL;
-    return;
+#endif
+    retval = read_file(pamh, file, &conf_list);
+#endif
+
+    if (retval != PAM_SUCCESS)
+      return retval;
+
+    for (char **conf = conf_list; *conf != NULL; ++conf) {
+      if ((retval = _parse_line(pamh, *conf, var)) == GOOD_LINE) {
+	retval = _check_var(pamh, var);
+
+	if (DEFINE_VAR == retval) {
+	  retval = _define_var(pamh, ctrl, var);
+
+	} else if (UNDEFINE_VAR == retval) {
+	  retval = _undefine_var(pamh, ctrl, var);
+	}
+      }
+      if (PAM_SUCCESS != retval && ILLEGAL_VAR != retval
+	  && BAD_LINE != retval && PAM_BAD_ITEM != retval) break;
+
+      _clean_var(var);
+
+    }  /* for */
+
+    /* tidy up */
+    free_string_array(conf_list);
+    _clean_var(var);        /* We could have got here prematurely,
+			     * this is safe though */
+    D(("Exit."));
+    return (retval != 0 ? PAM_ABORT : PAM_SUCCESS);
 }
 
+static int
+_parse_env_file(pam_handle_t *pamh, int ctrl, const char *file)
+{
+    int retval=PAM_SUCCESS, i, t;
+    char *key, *mark;
+    char **env_list = NULL;
 
+#ifdef USE_ECONF
+    retval = econf_read_file(pamh, file, "=", ENVIRONMENT, "", "", &env_list);
+#else
+    /* Only one file will be parsed. So, file has to be set. */
+    if (file == NULL) /* No filename has been set via argv. */
+      file = DEFAULT_ETC_ENVFILE;
+#ifdef VENDOR_DEFAULT_ETC_ENVFILE
+    /*
+    * Check whether file is available.
+    * If it does not exist, fall back to VENDOR_DEFAULT_ETC_ENVFILE; file.
+    */
+    struct stat stat_buffer;
+    if (stat(file, &stat_buffer) != 0 && errno == ENOENT) {
+      file = VENDOR_DEFAULT_ETC_ENVFILE;
+    }
+#endif
+    retval = read_file(pamh, file, &env_list);
+#endif
+
+    if (retval != PAM_SUCCESS)
+        return retval == PAM_IGNORE ? PAM_SUCCESS : retval;
+
+    for (char **env = env_list; *env != NULL; ++env) {
+        key = *env;
+
+	/* skip leading white space */
+	key += strspn(key, " \n\t");
+
+	/* skip blanks lines and comments */
+	if (key[0] == '#')
+	    continue;
+
+	/* skip over "export " if present so we can be compat with
+	   bash type declarations */
+	if (strncmp(key, "export ", (size_t) 7) == 0)
+	    key += 7;
+
+	/* now find the end of value */
+	mark = key;
+	while(mark[0] != '\n' && mark[0] != '#' && mark[0] != '\0')
+	    mark++;
+	if (mark[0] != '\0')
+	    mark[0] = '\0';
+
+       /*
+	* sanity check, the key must be alphanumeric
+	*/
+
+	if (key[0] == '=') {
+		pam_syslog(pamh, LOG_ERR,
+		           "missing key name '%s' in %s', ignoring",
+		           key, file);
+		continue;
+	}
+
+	for ( i = 0 ; key[i] != '=' && key[i] != '\0' ; i++ )
+	    if (!isalnum(key[i]) && key[i] != '_') {
+		pam_syslog(pamh, LOG_ERR,
+		           "non-alphanumeric key '%s' in %s', ignoring",
+		           key, file);
+		break;
+	    }
+	/* non-alphanumeric key, ignore this line */
+	if (key[i] != '=' && key[i] != '\0')
+	    continue;
+
+	/* now we try to be smart about quotes around the value,
+	   but not too smart, we can't get all fancy with escaped
+	   values like bash */
+	if (key[i] == '=' && (key[++i] == '\"' || key[i] == '\'')) {
+	    for ( t = i+1 ; key[t] != '\0' ; t++)
+		if (key[t] != '\"' && key[t] != '\'')
+		    key[i++] = key[t];
+		else if (key[t+1] != '\0')
+		    key[i++] = key[t];
+	    key[i] = '\0';
+	}
+
+	/* if this is a request to delete a variable, check that it's
+	   actually set first, so we don't get a vague error back from
+	   pam_putenv() */
+	for (i = 0; key[i] != '=' && key[i] != '\0'; i++);
+
+	if (key[i] == '\0' && !pam_getenv(pamh,key))
+	    continue;
+
+	/* set the env var, if it fails, we break out of the loop */
+	retval = pam_putenv(pamh, key);
+	if (retval != PAM_SUCCESS) {
+	    D(("error setting env \"%s\"", key));
+	    break;
+	} else if (ctrl & PAM_DEBUG_ARG) {
+	    pam_syslog(pamh, LOG_DEBUG,
+		       "pam_putenv(\"%s\")", key);
+	}
+    }
+
+    /* tidy up */
+    free_string_array(env_list);
+    D(("Exit."));
+    return retval;
+}
 
 /* --- authentication management functions (only) --- */
 

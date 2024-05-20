@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_lastlog
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_LASTLOG" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_LASTLOG" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,63 +51,63 @@ If the module is called in the auth or account phase, the accounts that were not
 value\&.
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBsilent\fR
+silent
 .RS 4
 Don\*(Aqt inform the user about any previous login, just update the
 /var/log/lastlog
 file\&. This option does not affect display of bad login attempts\&.
 .RE
 .PP
-\fBnever\fR
+never
 .RS 4
 If the
 /var/log/lastlog
 file does not contain any old entries for the user, indicate that the user has never previously logged in with a welcome message\&.
 .RE
 .PP
-\fBnodate\fR
+nodate
 .RS 4
 Don\*(Aqt display the date of the last login\&.
 .RE
 .PP
-\fBnoterm\fR
+noterm
 .RS 4
 Don\*(Aqt display the terminal name on which the last login was attempted\&.
 .RE
 .PP
-\fBnohost\fR
+nohost
 .RS 4
 Don\*(Aqt indicate from which host the last login was attempted\&.
 .RE
 .PP
-\fBnowtmp\fR
+nowtmp
 .RS 4
 Don\*(Aqt update the wtmp entry\&.
 .RE
 .PP
-\fBnoupdate\fR
+noupdate
 .RS 4
 Don\*(Aqt update any file\&.
 .RE
 .PP
-\fBshowfailed\fR
+showfailed
 .RS 4
 Display number of failed login attempts and the date of the last failed attempt from btmp\&. The date is not displayed when
 \fBnodate\fR
 is specified\&.
 .RE
 .PP
-\fBinactive=<days>\fR
+inactive=<days>
 .RS 4
 This option is specific for the auth or account phase\&. It specifies the number of days after the last login of the user when the user will be locked out by the module\&. The default value is 90\&.
 .RE
 .PP
-\fBunlimited\fR
+unlimited
 .RS 4
 If the
 \fIfsize\fR

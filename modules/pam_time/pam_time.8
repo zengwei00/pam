@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_time
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_TIME" "8" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM_TIME" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,18 +44,18 @@ option\&.
 If Linux PAM is compiled with audit support the module will report when it denies access\&.
 .SH "OPTIONS"
 .PP
-\fBconffile=/path/to/time\&.conf\fR
+conffile=/path/to/time\&.conf
 .RS 4
 Indicate an alternative time\&.conf style configuration file to override the default\&.
 .RE
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Some debug information is printed with
 \fBsyslog\fR(3)\&.
 .RE
 .PP
-\fBnoaudit\fR
+noaudit
 .RS 4
 Do not report logins at disallowed time to the audit subsystem\&.
 .RE

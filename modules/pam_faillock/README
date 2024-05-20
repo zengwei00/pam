@@ -48,6 +48,10 @@ conf=/path/to/config-file
     Use another configuration file instead of the default /etc/security/
     faillock.conf.
 
+    Use another configuration file instead of the default which is to use the
+    file /etc/security/faillock.conf or, if that one is not present, the file
+    %vendordir%/security/faillock.conf.
+
 The options for configuring the module behavior are described in the 
 faillock.conf(5) manual page. The options specified on the module command line
 override the values from the configuration file.

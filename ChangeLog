@@ -1,3 +1,1531 @@
+2023-05-07  Christian Göttsche  <cgzones@googlemail.com>
+
+	modules: update Linux detection.
+	GCC and Clang only define the macro `linux` when using the GNU dialect
+	of C (e.g. -std=gnu11 instead of -std=c11).  Since `linux` is also not
+	in a reserved namespace it might be target of collisions.
+	Use the canonical macro `__linux__` instead (already used in
+	pam_limits.c).
+
+2023-04-29  Dmitry V. Levin  <ldv@strace.io>
+
+	po: update .pot and .po files.
+	Regenerate po/Linux-PAM.pot and po/*.po using "make -C po update-po"
+	command.  This essentially updates the project version, line numbers,
+	and timestamps.
+
+	Prepare for 1.5.3 release.
+	* configure.ac (AC_INIT): Raise version to 1.5.3.
+	* NEWS: Update.
+
+2023-04-23  Remus-Gabriel Chelu  <remusgabriel.chelu@disroot.org>
+
+	po: update translations using Weblate (Romanian)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ro/
+
+2023-04-23  김인수  <simmon@nplob.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2023-04-20  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_succeed_if: do not use the result of keyword substitution for keyword match
+	* modules/pam_succeed_if/pam_succeed_if.c (evaluate): Do not use the
+	result of keyword substitution for keyword match.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/560
+
+2023-04-20  Dmitry V. Levin  <ldv@strace.io>
+
+	ci: add --enable-openssl jobs to the ci matrix.
+	Link: https://github.com/linux-pam/linux-pam/pull/550#issuecomment-1490362439
+
+2023-04-20  Stefan Schubert  <schubi@suse.de>
+
+	build: fix --enable-openssl.
+	* Make.xml.rules.in: Avoid conflicting profile.condition settings.
+	* configure.ac: Likewise.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/553
+
+2023-04-20  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_timestamp: Only build hmacfile when no openssl.
+	* modules/pam_timestamp/Makefile.am: Only build hmacfile target when
+	openssl isn't enabled.
+
+2023-04-20  Luca Boccassi  <bluca@debian.org>
+
+	man: clarify PAM_DATA_SILENT in pam_set_data.3.
+	pam_end.3 has additional and important information about PAM_DATA_SILENT,
+	copy it to pam_set_data.3 since that describes the cleanup callback where
+	it will be set.
+
+2023-04-20  Mark Huang  <huangyuxi99@gmail.com>
+
+	fix a grammar mistake.
+
+2023-04-06  Thorsten Kukuk  <kukuk@suse.com>
+
+	configure: Disable NIS if header files are missing.
+	configure.ac: Disable NIS if RPC or YP header files are missing
+	modules/pam_unix/support.c: Use HAVE_NIS to check for header file presence
+	modules/pam_unix/pam_unix_passwd.c: Use HAVE_NIS, too
+
+2023-04-04  Thorsten Kukuk  <kukuk@suse.com>
+
+	doc: Include custom-html.xsl.in and custom-man.xsl.in.
+	doc/Makefile.am: Replace custom-html.xsl and custom-man.xsl with
+	                 custom-html.xsl.in and custom-man.xsl.in EXTRA_DIST
+
+2023-03-31  Dmitry V. Levin  <ldv@strace.io>
+
+	treewide: fix unnecessary $ on arithmetic variables.
+	This should fix shellcheck warning SC2004.
+
+2023-03-30  Dmitry V. Levin  <ldv@strace.io>
+
+	pgp.keys.asc: update.
+	* pgp.keys.asc: Replace with the key used to sign v1.5.2.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/544
+
+2023-03-30  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_timestamp: fix build failure.
+	bcba17939e1b1a568cd4a764534cde74d37078cc started using pam_overwrite_n()
+	without providing the definition to this function, which causes a build
+	failure.
+
+	modules/pam_timestamp/hmac_openssl_wrapper.c: include pam_inline.h
+
+2023-03-14  A S Alam  <amanpreet.alam@gmail.com>
+
+	po: update translations using Weblate (Punjabi)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/pa/
+
+2023-03-14  Thorsten Kukuk  <kukuk@suse.com>
+
+	manual pages: document usage of $DISPLAY and PAM_TTY.
+	man/pam_item_types_std.inc.xml: In the past, PAM_TTY was used for tty
+	devices and $DISPLAY variables for X-based applications. With the
+	introduction of PAM_DISPLAY PAM_TTY should only be used for devices.
+
+2023-03-04  Christian Göttsche  <cgzones@googlemail.com>
+
+	libpam: simplify string copying using strdup.
+
+2023-02-28  Christian Göttsche  <cgzones@googlemail.com>
+
+	modules: make use of secure memory erasure.
+	Use empty initialization of structs to minimize the memset() usage, to
+	reduce the amount of calls which are not sensitive.
+
+	Non trivial changes:
+
+	- pam_env:
+	  * erase environment variables where possible
+
+	- pam_exec:
+	  * erase responce on error
+	  * erase auth token
+
+	- pam_pwhistory:
+	  * erase buffers containing old passwords
+
+	- pam_selinux: skip overwriting data structure consisting of only
+	  pointers to insensitive data, which also gets free'd afterwards (so
+	  it currently does not protect against double-free or use-after-free on
+	  the member pointers)
+
+	- pam_unix: erase cipher data in more places
+
+	- pam_userdb: erase password hashes
+
+2023-02-28  Christian Göttsche  <cgzones@googlemail.com>
+
+	libpamc: make use of secure memory erasure.
+
+	libpam_misc: make use of secure memory erasure.
+
+2023-02-28  Christian Göttsche  <cgzones@googlemail.com>
+
+	libpam: make use of secure memory erasure.
+	Non trivial changes:
+
+	  - erase responses in pam_get_authtok_internal() on error branch
+
+2023-02-28  Christian Göttsche  <cgzones@googlemail.com>
+
+	libpam: introduce secure memory erasure helpers.
+	Avoid compiler optimizations to elide the memory erasure by using a
+	secure method: either memset_explicit() [C23], bzero_explicit() [glibc
+	2.25] or a manual memory barrier.
+
+	Since the current helpers _pam_overwrite*() and _pam_drop_reply() are
+	publicly exported, create new ones in "pam_inline.h" and deprecate the
+	old ones.
+
+2023-02-28  Christian Göttsche  <cgzones@googlemail.com>
+
+	pam_env: use helper to free string list.
+	Free the environment variables list via the designated helper
+	free_string_array() rather than free its elements in a loop, which might
+	skip some.
+
+	pam_env: override undefined pointer after asprintf failure.
+	On failure the content of the string pointer passed to asprintf(3) is
+	undefined.  Set to NULL before free'ing the parent array.
+
+2023-02-28  Thorsten Kukuk  <kukuk@suse.com>
+
+	Y2038: use logind instead of utmp.
+	The struct utmp from glibc uses on many 64bit architectures a 32bit
+	time_t for compatibility with a 32bit userland, which means utmp will
+	not survive the year 2038 (32bit time_t overflow). Use the data from
+	logind instead of utmp.
+
+	* configure.ac: Add option --enable-logind
+	* modules/pam_issue/Makefile.am: Add CFLAGS/LIBS for logind support
+	* modules/pam_issue/pam_issue.c: Use sd_get_sessions instead of utmp
+	* modules/pam_timestamp/Makefile.am: Add CFLAGS/LIBS for logind support
+	* modules/pam_timestamp/pam_timestamp.c: query logind for login time
+
+2023-02-20  Martin Srebotnjak  <miles@filmsi.net>
+
+	po: update translations using Weblate (Slovenian)
+	Currently translated at 16.8% (17 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/sl/
+
+2023-02-20  Yaron Shahrabani  <sh.yaron@gmail.com>
+
+	po: update translations using Weblate (Hebrew)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/he/
+
+2023-02-17  Thorsten Kukuk  <kukuk@suse.com>
+
+	manual pages: enhance pam.d documentation.
+	Make /usr/lib/pam.d and <vendordir>/pam.d more visible in the standard
+	manual pages, so that people don't assume there is only /etc/pam.d
+
+	* doc/man/pam.8.xml: Don't always speak about /etc/pam.d only
+	* doc/man/pam.conf-desc.xml: Don't always speak about /etc/pam.d only
+	* doc/man/pam.conf-dir.xml: Explain search path for pam config files
+	* doc/man/pam.conf.5.xml: Add filelist with all pam.d directories
+
+2023-02-15  Thorsten Kukuk  <kukuk@suse.com>
+
+	pam_lastlog: deprecate it and disable by default.
+	pam_lastlog uses utmp, wtmp, btmp and lastlog. None of them is Y2038
+	safe, even on 64bit architectures. Most 64bit architectures use 32bit
+	time_t for compat reasons with 32bit userland.
+	Additionally, all relevant tools for which pam_lastlog would make sense
+	already have their own support for all four files, so this module will
+	most likely only create duplicate entries.
+
+	* configure.ac: don't build pam_lastlog by default.
+	* ci/run-build-and-tests.sh: enable pam_lastlog.
+
+2023-02-14  Thorsten Kukuk  <kukuk@suse.com>
+
+	libpam: use getlogin() from libc and not utmp.
+	 utmp uses 32bit time_t for compatibility with 32bit userland on some
+	 64bit systems and is thus not Y2038 safe. Use getlogin() from libc
+	 which avoids using utmp and is more safe than the old utmp-based
+	 implementation by using /proc/self/loginuid.
+
+	 * libpam/pam_modutil_getlogin.c: Use getlogin() instead of parsing utmp
+
+2023-02-07  Josef Hruska  <hrusjos@gmail.com>
+
+	po: update translations using Weblate (Czech)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/cs/
+
+2023-02-07  Seong-ho Cho  <darkcircle.0426@gmail.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2023-02-07  Gogo Gogsi  <linux.hr@protonmail.com>
+
+	po: update translations using Weblate (Croatian)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/hr/
+
+2023-02-07  Baurzhan Muftakhidinov  <baurthefirst@gmail.com>
+
+	po: update translations using Weblate (Kazakh)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/kk/
+
+2023-02-07  Ettore Atalan  <atalanttore@googlemail.com>
+
+	po: update translations using Weblate (German)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/de/
+
+2023-02-07  Luna Jernberg  <bittin@reimu.nl>
+
+	po: update translations using Weblate (Swedish)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/sv/
+
+2023-02-07  Jan Kuparinen  <copper_fin@hotmail.com>
+
+	po: update translations using Weblate (Finnish)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/fi/
+
+2023-02-07  Yuri Chornoivan  <yurchor@ukr.net>
+
+	po: update translations using Weblate (Ukrainian)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/uk/
+
+2023-02-07  Oğuz Ersen  <oguz@ersen.moe>
+
+	po: update translations using Weblate (Turkish)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/tr/
+
+2023-02-07  Piotr Drąg  <piotrdrag@gmail.com>
+
+	po: update translations using Weblate (Polish)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/pl/
+
+2023-02-07  김인수  <simmon@nplob.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2023-02-07  Temuri Doghonadze  <temuri.doghonadze@gmail.com>
+
+	po: update translations using Weblate (Georgian)
+	Currently translated at 100.0% (101 of 101 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ka/
+
+2023-02-07  Stefan Schubert  <schubi@suse.de>
+
+	build: use <vendordir>/security directory for installation if it has been set
+	Otherwise the corresponding files are still installed in /etc/security.
+
+	* configure.ac (AC_SUBST): Add VENDOR_SCONFIGDIR.
+	(AM_CONDITIONAL): Add HAVE_VENDORDIR.
+	* modules/*/Makefile.am (secureconfdir): Set to VENDOR_SCONFIGDIR
+	if HAVE_VENDORDIR has been set, otherwise to SCONFIGDIR.
+
+2023-02-07  Dmitry V. Levin  <ldv@strace.io>
+
+	ci: make VENDORDIR based on $prefix for the clang case as well.
+	* .github/workflows/ci.yml (clang-14): Change VENDORDIR from /usr/etc to
+	${prefix}/share/etc, this should help to check that the code no longer
+	relies on the assumption that VENDORDIR == /usr/etc.
+
+	Complements: 0d1c62eb4733 ("ci: make VENDORDIR based on $prefix")
+
+2023-02-05  Dmitry V. Levin  <ldv@strace.io>
+
+	ci: make VENDORDIR based on $prefix.
+	* ci/run-build-and-tests.sh: Accept VENDORDIR that does not start with /.
+	* .github/workflows/ci.yml (VENDORDIR): Change from /usr/etc to
+	${prefix}/share/etc, this should help to check that the code no longer
+	relies on the assumption that VENDORDIR == /usr/etc.
+
+2023-02-04  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_env: do not assume in tests that VENDORDIR is /usr/etc.
+	* modules/pam_env/tst-pam_env-retval.c: Include <errno.h> and <libgen.h>.
+	[VENDORDIR] (dir, dir_usr, dir_usr_etc): Remove.
+	[VENDORDIR] (mkdir_p, rmdir_p): New functions.
+	(setup, cleanup) [VENDORDIR]: Use them.
+
+2023-02-03  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_env: do not hardcode /usr/etc into tests.
+	* modules/pam_env/tst-pam_env-retval.c: Replace /usr/etc/security with
+	VENDOR_SCONFIGDIR, /usr/etc with VENDORDIR.  Do not define and use
+	VENDORDIR based variables unless VENDORDIR is defined.
+
+	Fixes: 6135c45347b6 ("pam_env: Use vendor specific pam_env.conf and environment as fallback")
+
+2023-02-02  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_env: do not hardcode /usr/etc into documentation.
+	* modules/pam_env/pam_env.conf.5.xml: Replace /usr/etc with %vendordir%.
+
+	Fixes: 6135c45347b6 ("pam_env: Use vendor specific pam_env.conf and environment as fallback")
+
+2023-02-01  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_env: fix VENDOR_DEFAULT_ETC_ENVFILE.
+	* modules/pam_env/pam_env.c (VENDOR_DEFAULT_ETC_ENVFILE): Assume that
+	VENDORDIR already includes "/etc".
+
+	Fixes: 6135c45347b6 ("pam_env: Use vendor specific pam_env.conf and environment as fallback")
+
+2023-01-31  Thorsten Kukuk  <kukuk@suse.com>
+
+	pam_unix: don't link against yppasswd_xdr if NIS is disabled.
+	* configure.ac: Define HAVE_NIS if NIS is enabled.
+	* modules/pam_unix/Makefile.am: Don't link against yppasswd_xdr.c
+	if NIS is disabled.
+	* modules/pam_unix/pam_unix_passwd.c: Don't redefine HAVE_NIS.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/523
+
+2023-01-30  Christian Göttsche  <cgzones@googlemail.com>
+
+	Enable format compiler warnings.
+	* libpam/include/pam_cc_compat.h (DIAG_PUSH_IGNORE_FORMAT_NONLITERAL,
+	DIAG_POP_IGNORE_FORMAT_NONLITERAL): New macros.
+	* libpam/pam_handlers.c (_pam_open_config_file): Use them to exempt
+	usage of format string literals from a constant array.
+	* m4/warn_lang_flags.m4 (gl_WARN_ADD): Add -Wformat=2.
+
+	Enable undef warning.
+	* modules/pam_unix/pam_unix_passwd.c: Wrap checks for configure macros
+	into defined() operator.
+	* m4/warn_lang_flags.m4 (gl_WARN_ADD): Add -Wundef.
+
+2023-01-30  Christian Göttsche  <cgzones@googlemail.com>
+
+	Enable additional compiler warnings.
+	The current codebase should comply with those.
+
+	* m4/warn_lang_flags.m4 (gl_WARN_ADD): Add -Winit-self,
+	-Wnull-dereference, and -Wunused.
+
+2023-01-27  Stefan Schubert  <schubi@suse.de>
+
+	pam_pwhistory: use vendor specific pwhistory.conf as fallback.
+	Use the vendor directory defined by --enable-vendordir=DIR configure
+	option as fallback for the distribution provided default config file
+	if there is no configuration in /etc.
+
+	* modules/pam_pwhistory/pam_pwhistory.8.xml: Describe pwhistory.conf
+	* modules/pam_pwhistory/pwhistory_config.c [VENDOR_SCONFIGDIR]
+	(VENDOR_PWHISTORY_DEFAULT_CONF): New macro.
+	(parse_config_file) [VENDOR_PWHISTORY_DEFAULT_CONF]: Try to open
+	VENDOR_PWHISTORY_DEFAULT_CONF if PWHISTORY_DEFAULT_CONF file does not
+	exist.
+
+2023-01-27  Stefan Schubert  <schubi@suse.de>
+
+	pam_pwhistory: add a basic test for return values.
+	* modules/pam_pwhistory/tst-pam_pwhistory-retval.c: New file.
+	* modules/pam_pwhistory/Makefile.am (TESTS): Add $(check_PROGRAMS).
+	(check_PROGRAMS, tst_pam_pwhistory_retval_LDADD): New variables.
+
+2023-01-25  Christian Göttsche  <cgzones@googlemail.com>
+
+	examples: ignore generated tty_conv.
+
+2023-01-24  Thorsten Kukuk  <kukuk@suse.com>
+
+	pam_unix: regenerate yppasswd.h/yppasswd_xdr.c (#480)
+	Regenerate yppasswd.h and yppasswd_xdr.c from yppasswd.x (libnsl) to
+	avoid GPL code in a PAM module.
+
+	Link: https://github.com/thkukuk/libnsl/blob/master/src/rpcsvc/yppasswd.x
+
+2023-01-24  Dmitry V. Levin  <ldv@strace.io>
+
+	libpam: remove dead code in pam_dynamic.c.
+	Apparently, the PAM_SHL variant cannot be compiled since the very first
+	commit back in 2005 when it was introduced, and another variant uses
+	PAM_DYLD which is virtually unknown to search engines.
+
+	* libpam/pam_dynamic.c [PAM_SHL || PAM_DYLD]: Remove.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/477
+
+2023-01-24  Christian Göttsche  <cgzones@googlemail.com>
+
+	pam_selinux: treat getenforce failures as enforcing.
+	security_getenforce(3) can return -1 on error; either because the
+	selinuxfs is not mounted or reading from /sys/fs/selinux/enforce failed.
+
+	Since security_getenforce(3) is either called after an approving call to
+	is_selinux_enabled(3) in create_context() or with populated module
+	data in restore_context(), which requires a previous pass of
+	create_context(), the selinuxfs should be mounted.
+	Reading from /sys/fs/selinux/enforce should never fail (except being
+	prohibited by the SElinux policy itself) since it is a public interface.
+
+	In the unlikely case of security_getenforce(3) nevertheless failing
+	continue execution as if the result was enforcing (likewise to
+	pam_sepermit and pam_rootok).
+
+2023-01-21  Dmitry V. Levin  <ldv@strace.io>
+
+	.github: add gcc-12, clang-13, and clang-14 jobs.
+	* .github/workflows/ci.yml (gcc12-x86_64, clang14-x86_64,
+	clang13-x86_64): New jobs.
+	(gcc11-x86_64-vendordir): Rename to gcc12-x86_64-vendordir,
+	replace gcc-11 with gcc-12.
+	(clang12-x86_64-vendordir): Rename to clang14-x86_64-vendordir,
+	replace clang-12 with clang-14.
+
+2023-01-20  Dmitry V. Levin  <ldv@strace.io>
+
+	.github: switch from ubuntu-20.04 to ubuntu-latest.
+	Switch runners to the latest Ubuntu LTS available, which is currently
+	Ubuntu 22.04.  Also, remove old compiler versions from the ci matrix.
+
+	* .github/workflows/ci.yml (gcc8-x86_64, clang10-x86_64, clang9-x86_64,
+	clang8-x86_64): Remove.
+	(gcc11-x86_64-vendordir, gcc11-x86_64, gcc10-x86_64, gcc9-x86_64,
+	clang12-x86_64-vendordir, clang12-x86_64, clang11-x86_64): Replace
+	ubuntu-20.04 with ubuntu-latest.
+
+	Link: https://github.blog/changelog/2022-11-09-github-actions-ubuntu-latest-workflows-will-use-ubuntu-22-04/
+
+2023-01-19  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_unix: silence compiler warning in md5.c.
+	clang-14 insists on issuing the following warning:
+
+	  In file included from md5_good.c:4:
+	  md5.c:92:15: error: passing 1-byte aligned argument to 4-byte aligned parameter 1 of 'byteReverse' may result in an unaligned pointer access [-Werror,-Walign-mismatch]
+	                  byteReverse(ctx->in.c, 16);
+	                              ^
+	  md5.c:101:15: error: passing 1-byte aligned argument to 4-byte aligned parameter 1 of 'byteReverse' may result in an unaligned pointer access [-Werror,-Walign-mismatch]
+	                  byteReverse(ctx->in.c, 16);
+	                              ^
+	  md5.c:136:15: error: passing 1-byte aligned argument to 4-byte aligned parameter 1 of 'byteReverse' may result in an unaligned pointer access [-Werror,-Walign-mismatch]
+	                  byteReverse(ctx->in.c, 16);
+	                              ^
+	  md5.c:145:14: error: passing 1-byte aligned argument to 4-byte aligned parameter 1 of 'byteReverse' may result in an unaligned pointer access [-Werror,-Walign-mismatch]
+	          byteReverse(ctx->in.c, 14);
+	                      ^
+	  md5.c:151:14: error: passing 1-byte aligned argument to 4-byte aligned parameter 1 of 'byteReverse' may result in an unaligned pointer access [-Werror,-Walign-mismatch]
+	          byteReverse(ctx->buf.c, 4);
+	                      ^
+
+	* modules/pam_unix/md5.c (byteReverse): Use uint32 instead of
+	uint8_aligned, update all users.
+	(uint8_aligned): Remove unused type.
+
+2023-01-19  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_client.h: silence compiler warning.
+	gcc-12 insists on issuing the following warning:
+
+	  In file included from libpamc.h:13,
+	                   from pamc_converse.c:9:
+	  pamc_converse.c: In function 'pamc_converse':
+	  include/security/pam_client.h:129:27: error: array subscript 'struct <anonymous>[0]' is partly outside array bounds of 'unsigned char[6]' [-Werror=array-bounds]
+	    129 |                 (*(old_p))->control = cntrl;                               \
+	        |                           ^~
+	  pamc_converse.c:209:5: note: in expansion of macro 'PAM_BP_RENEW'
+	    209 |     PAM_BP_RENEW(prompt_p, PAM_BPC_FAIL, 0);
+	        |     ^~~~~~~~~~~~
+	  include/security/pam_client.h:87:29: note: object of size 6 allocated by 'calloc'
+	     87 | # define PAM_BP_CALLOC      calloc
+	        |                             ^
+	  include/security/pam_client.h:124:29: note: in expansion of macro 'PAM_BP_CALLOC'
+	    124 |             if ((*(old_p) = PAM_BP_CALLOC(1, 1+__size))) {                 \
+	        |                             ^~~~~~~~~~~~~
+	  pamc_converse.c:209:5: note: in expansion of macro 'PAM_BP_RENEW'
+	    209 |     PAM_BP_RENEW(prompt_p, PAM_BPC_FAIL, 0);
+	        |     ^~~~~~~~~~~~
+
+	* libpamc/include/security/pam_client.h (pamc_bp_t): Decorate the
+	structure pointed by pamc_bp_t pointer as packed.  Despite being a part
+	of the API, the structure is not supposed to be used directly, and all
+	the interface macros were assuming from the very beginning that this
+	structure is packed.
+
+2023-01-19  Dmitry V. Levin  <ldv@strace.io>
+
+	pam_limits: silence compiler warning.
+	gcc-12 insists on issuing the following warning:
+
+	  In file included from /usr/include/string.h:535,
+	                   from pam_limits.c:24:
+	  In function 'strncat',
+	      inlined from 'check_logins' at pam_limits.c:287:6,
+	      inlined from 'setup_limits' at pam_limits.c:1066:13,
+	      inlined from 'pam_sm_open_session' at pam_limits.c:1267:14:
+	  /usr/include/x86_64-linux-gnu/bits/string_fortified.h:138:10: error: '__builtin___strncat_chk' argument 2 declared attribute 'nonstring' [-Werror=stringop-overread]
+	    138 |   return __builtin___strncat_chk (__dest, __src, __len,
+	        |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	    139 |                                   __glibc_objsize (__dest));
+	        |                                   ~~~~~~~~~~~~~~~~~~~~~~~~~
+	  In file included from /usr/include/utmp.h:29,
+	                   from pam_limits.c:37:
+	  /usr/include/x86_64-linux-gnu/bits/utmp.h: In function 'pam_sm_open_session':
+	  /usr/include/x86_64-linux-gnu/bits/utmp.h:66:8: note: argument 'ut_user' declared here
+	     66 |   char ut_user[UT_NAMESIZE]
+	        |        ^~~~~~~
+
+	* modules/pam_limits/pam_limits.c (check_logins): Use memcpy instead of
+	strncat to pacify the compiler.
+
+2023-01-18  Dmitry V. Levin  <ldv@altlinux.org>
+
+	.github: remove x86 and x32 jobs.
+	These types of jobs were implemented using the old version of the OS
+	that is currently being deprecated by github actions.
+
+	* .github/workflows/ci.yml (gcc11-x86-vendordir, gcc11-x86, gcc10-x86,
+	gcc9-x86, gcc8-x86, clang10-x86, clang9-x86, clang8-x86, gcc11-x32,
+	gcc10-x32, gcc9-x32, gcc8-x32): Remove.
+
+	Link: https://github.com/actions/runner-images/issues/6002
+
+2023-01-18  Cyril Duval  <cyril.duval@diabolocom.com>
+
+	pam_listfile: fix pointer misuse leading to data corruption.
+	pam_listfile assumes the group being tested will be written at the end
+	of the argument list by carrying only a pointer to the value being
+	examined in 'myval'.
+
+	Therefore example
+
+	'''
+	auth    required       pam_listfile.so \
+	        onerr=succeed apply=ftp item=user sense=deny file=/etc/ftpusers
+	'''
+
+	modified from https://linux.die.net/man/8/pam_listfile is not working because
+	'apply_val' will point to the latest value of 'myval', which in this case will
+	be "/etc/ftpusers" instead of "ftp".
+
+	Fix this issue by copying the value of 'myval' instead of just taking
+	a reference pointer.
+
+2022-12-16  Stefan Schubert  <schubi@suse.de>
+
+	doc: Update PAM documentation from DockBook 4 to DocBook 5.
+	Changed files
+	--------------
+
+	Make.xml.rules.in:
+	- Using RNG file instead of DTD file for checking XML files.
+	- Taking the correct stylesheet for README files.
+
+	doc/sag/Makefile.am, doc/adg/Makefile.am, doc/mwg/Makefile.am:
+	- Using RNG file instead of DTD file for checking XML files.
+
+	configure.ac:
+	- Adding a new option for selecting RNG check file (-enable-docbook-rng)
+	- Switching stylesheets to docbook 5
+	- Checking DocBook 5 environment instead of DocBook 4 environment
+
+	*.xml:
+	Update from DockBook 4 to DocBook 5
+
+2022-12-14  Stefan Schubert  <schubi@suse.de>
+
+	pam_env: Use vendor specific pam_env.conf and environment as fallback.
+	Use the vendor directory as fallback for a distribution provided default
+	config if there is no one in /etc.
+
+	* Makefile.am: Add libeconf setting.
+	* pam_env.c: Take care about the fallback configuration in the vendor directory.
+	* pam_env.8.xml: Add description for the vendor directory.
+	* pam_env.conf.5.xml: Add description for the vendor directory.
+	* tst-pam_env-retval.c: Add tests for libeconf.
+	* configure.ac: Add ECONF settings for building man pages.
+
+2022-12-12  Stefan Schubert  <schubi@suse.de>
+
+	pam_shells: Use the vendor directory as fallback for a distribution provided default config if there is no one in /etc.
+	If pam will be compiled with the option --enable-vendordir=<vendor_dir> and
+	NOT defined --disable-econf, the files which define valid login shells will
+	be parsed in following order:
+	- <vendor_dir>/shells
+	- <vendor_dir>/shells.d/*
+	- /etc/shells.d/shells
+	But all files in <vendor_dir> will be ingnored if the user has defined his
+	own file /etc/shells.
+	This commit solves issue: https://github.com/linux-pam/linux-pam/issues/498
+
+2022-12-07  Stefan Schubert  <schubi@suse.de>
+
+	pam_shells: Added xtest test case.
+	Test case for checking pam_authenticate in pam_shells.
+
+2022-12-06  Thorsten Kukuk  <kukuk@suse.com>
+
+	doc/man/Makefile.am: fix XMLS list.
+	The XMLS list of xml sources for the manual pages missed some xml files
+	and instead contained some nroff sources.
+
+2022-12-01  Valentin Lefebvre  <valentin.lefebvre@suse.com>
+
+	pam_env: _parse_line: fix quoteflg handled.
+	Check if quote flag is positive before decrementing it. Otherwise, for
+	some use case, it could become negative, and have an unwanted empty string
+	instead of an undefined variable.
+
+2022-12-01  Dmitry V. Levin  <ldv@altlinux.org>
+
+	.github: switch from actions/checkout@v2 to actions/checkout@v3.
+	This fixes the following diagnostic warning:
+
+	  Node.js 12 actions are deprecated. For more information see:
+	  https://github.blog/changelog/2022-09-22-github-actions-all-actions-will-begin-running-on-node16-instead-of-node12/.
+
+	* .github/workflows/ci.yml: Replace actions/checkout@v2 with
+	actions/checkout@v3.
+
+2022-11-11  Dmitry V. Levin  <ldv@altlinux.org>
+
+	po: update .pot and .po files.
+	Regenerate po/Linux-PAM.pot and po/*.po using "make -C po update-po"
+	command.  This updates translations of pam_faillock and pam_mail
+	modules.
+
+2022-11-11  ed neville  <ed@s5h.net>
+
+	pam_mail: adjust wording for no new mail.
+	Wording of no new mail message should be significantly different from
+	new mail so that it does not align in length or similar words.
+
+	* modules/pam_mail/pam_mail.c (report_mail): Change the wording of
+	no new mail message.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/465
+
+2022-11-11  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_faillock: fix typo in usage diagnostics.
+	* modules/pam_faillock/main.c (usage): Remove extra whitespace from the
+	usage diagnostics.
+
+	Fixes: 94f0f5ebb ("faillock: add support to print login failure info in legacy format")
+
+2022-11-11  Emilio Herrera  <ehespinosa57@gmail.com>
+
+	po: update translations using Weblate (Spanish)
+	Currently translated at 90.0% (90 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/es/
+
+2022-11-11  김인수  <simmon@nplob.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2022-11-11  Temuri Doghonadze  <temuri.doghonadze@gmail.com>
+
+	po: update translations using Weblate (Georgian)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ka/
+	Resolves: https://github.com/linux-pam/linux-pam/pull/485
+
+2022-11-07  Davin Shearer  <2205472+scholarsmate@users.noreply.github.com>
+
+	pam_lastlog: fix file locking.
+	Fixed 2 instances in the pam_lastlog module where file locks were
+	not being enforced when reading and writing last login records.
+
+	* modules/pam_lastlog/pam_lastlog.c (last_login_write): The write lock
+	failure is fatal after 3 tries.
+	(last_login_read): The read lock failure is non-fatal after 3 tries.
+	It is non-fatal in the read case due to concerns about a possible DoS.
+
+2022-11-07  Deepak Das  <ddas@redhat.com>
+
+	pam_faillock: avoid logging an erroneous consecutive login failure message
+	* modules/pam_faillock/pam_faillock.c (write_tally): Avoid logging
+	a consecutive login failure message for the root user in case when
+	even_deny_root is not set.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=2082442
+
+2022-11-07  Deepak Das  <ddas@redhat.com>
+
+	pam_faillock: Clarify missing user faillock files after reboot.
+	* modules/pam_faillock/faillock.conf.5.xml: Adding note related to missing
+	user specific faillock files after reboot.
+
+	* modules/pam_faillock/pam_faillock.8.xml: Adding note related to missing
+	user specific faillock files after reboot.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=2062512
+
+2022-10-27  Stefan Schubert  <schubi@suse.de>
+
+	doc: make stylesheets configurable.
+	Before this change, all stylesheets were hardcoded.
+	With this change, stylesheets can be defined at configure stage.
+
+	* configure.ac: Add new options to configure stylesheets:
+	--enable-html-stylesheet=FILE
+	--enable-txt-stylesheet=FILE
+	--enable-pdf-stylesheet=FILE
+	--enable-man-stylesheet=FILE
+	* doc/custom-html.xsl: Rename to doc/custom-html.xsl.in, parametrize html
+	stylesheet.
+	* doc/custom-man.xsl: Rename to doc/custom-man.xsl.in, parametrize man
+	stylesheet.
+	* doc/.gitignore: Add custom-man.xsl and custom-html.xsl.
+	* doc/adg/Makefile.am: Use stylesheet variables.
+	* doc/mwg/Makefile.am: Likewise.
+	* doc/sag/Makefile.am: Likewise.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/499
+
+2022-09-28  Felix Lechner  <felix.lechner@lease-up.com>
+
+	libpam*: For uncommon prefixes, provide substitution variables in pkgconfig files.
+	Fix undefined references to ${exec_prefix} in pkgconfig files on Guix.
+	The subsequent declarations of ${libdir} and ${includedir} in the same
+	files require this commit when ${prefix} is set to something other
+	than /usr.
+
+	When the pkgconfig files were initially provided, the two lines added
+	here were dropped for what seemed like a good reason. [1] In the
+	common case of a /usr prefix, 'configure.ac' sets ${libdir} and
+	possibly ${includedir} explicitly [2] so the additional lines were
+	then not needed.
+
+	Guix and probably Nix too, however, depart from the Filesystem
+	Hierarchy Standard and require the missing lines. Without those lines,
+	the pkgconfig files are defective on Guix. [3]
+
+	Since working systems are not affected, the lines are added for all.
+	The fix was confirmed for Guix. One of the files looked like this:
+
+	prefix=/gnu/store/3mcmjilqrivrpb3hvps32lnbnyrxrzr8-linux-pam-1.5.2-1.dc2f566
+	exec_prefix=${prefix}
+	libdir=${exec_prefix}/lib
+	includedir=/gnu/store/3mcmjilqrivrpb3hvps32lnbnyrxrzr8-linux-pam-1.5.2-1.dc2f566/include/security
+
+	Name: PAM
+	Description: The primary Linux-PAM library. It is used by PAM modules and PAM-aware applications.
+	URL: http://www.linux-pam.org/
+	Version: 1.5.2
+	Cflags: -I${includedir}
+	Libs: -L${libdir} -lpam
+
+	* libpam/pam.pc.in, libpamc/pamc.pc.in, libpam_misc/pam_misc.pc.in:
+	  Add @prefix@ and @exec_prefix@.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/466
+
+	[1] https://github.com/linux-pam/linux-pam/pull/369#discussion_r650557756
+	[2] https://github.com/linux-pam/linux-pam/blob/40c271164dbcebfc5304d0537a42fb42e6b6803c/configure.ac#L28-L36
+	[3] https://github.com/linux-pam/linux-pam/issues/466
+
+2022-09-27  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_lastlog: check localtime_r() return value.
+	Check the return value of localtime_r() before calling strftime(). This
+	function crashes if the argument is NULL.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=2012871
+
+2022-09-12  Sam James  <sam@gentoo.org>
+
+	configure.ac: fix implicit function declaration in mail spool directory check
+	Fixes the following error with Clang 15 (which makes implicit function
+	declarations an error by default):
+	```
+	+error: call to undeclared library function 'exit' with type 'void (int) __attribute__((noreturn))'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+	 exit(0);
+	 ^
+	 note: include the header <stdlib.h> or explicitly provide a declaration for 'exit'
+	```
+
+2022-07-18  H A  <contact+fedora@hen.ee>
+
+	po: update translations using Weblate (Estonian)
+	Currently translated at 28.0% (28 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/et/
+
+2022-07-18  김인수  <simmon@nplob.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2022-07-18  Dingzhong Chen  <wsxy162@gmail.com>
+
+	po: update translations using Weblate (Chinese (Simplified) (zh_CN))
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/zh_CN/
+
+2022-07-16  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_namespace: make sure the SIGCHLD handler is not reset too early.
+	* modules/pam_namespace/pam_namespace.c (inst_init): Make sure
+	the SIGCHLD handler is not reset too early by moving the sigaction
+	call right before the fork call.
+
+	pam_mkhomedir: make sure the SIGCHLD handler is not reset too early.
+	* modules/pam_mkhomedir/pam_mkhomedir.c (create_homedir): Make sure
+	the SIGCHLD handler is not reset too early by moving the sigaction
+	call right before the fork call.
+
+2022-07-15  dengbo  <dengbo@uniontech.com>
+
+	pam_xauth: add SIGCHLD protection handle.
+	* modules/pam_xauth/pam_xauth.c (run_coprocess): Save the SIGCHLD
+	handler and reset it to the default before calling fork, restore the
+	handler after waitpid returns.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/469
+
+2022-07-15  dengbo  <dengbo@uniontech.com>
+
+	pam_exec: add SIGCHLD protection handle.
+	* modules/pam_exec/pam_exec.c (call_exec): Save the SIGCHLD handler and
+	reset it to the default before calling fork, restore the handler after
+	waitpid returns.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/405
+
+2022-07-15  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_pwhistory: document config load from file.
+	* modules/pam_pwhistory/pam_pwhistory.8.xml: Add new option to select
+	configuration file to read.
+	* modules/pam_pwhistory/pwhistory.conf.5.xml: Document configuration
+	options for the file.
+	* modules/pam_pwhistory/Makefile.am (dist_man_MANS): Add pwhistory.conf.5.
+	(XMLS): Add pwhistory.conf.5.xml.
+
+2022-07-15  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_pwhistory: load config from file.
+	* modules/pam_pwhistory/pam_pwhistory.c: Load config from file and
+	provide new conf option to select the file.
+	* modules/pam_pwhistory/pwhistory_config.c: Parse config from file and
+	load to options structure.
+	* modules/pam_pwhistory/pwhistory_config.h: Move options_t structure and
+	define parse_config_file().
+	* modules/pam_pwhistory/Makefile.am (noinst_HEADERS): Add pwhistory_config.h.
+	(pam_pwhistory_la_SOURCES): Add pwhistory_config.c.
+	(dist_secureconf_DATA): Add pwhistory.conf.
+	* modules/pam_pwhistory/pwhistory.conf: New configuration file.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=2068461
+
+2022-07-15  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	libpam: improve pam_modutil_search_key() doc.
+	* libpam/include/security/pam_modutil.h: Improve the
+	pam_modutil_search_key() interface documentation.
+
+2022-07-15  Dmitry V. Levin  <ldv@altlinux.org>
+
+	_pam_add_handler: make sure struct handler is properly initialized on error path
+	* libpam/pam_handlers.c (_pam_add_handler): Use calloc instead of malloc
+	for struct handler allocation to avoid returning garbage in some fields
+	of the structure on error path.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/475
+
+2022-07-01  Dmitry V. Levin  <ldv@altlinux.org>
+
+	.github: switch whitespace-errors job to ubuntu-latest.
+	While ubuntu-latest in ci is not necessarily the latest version of the
+	OS available in ci, whitespace-errors job should be agnostic to the
+	version being used, so use the default one.
+
+	* .github/workflows/ci.yml (whitespace-errors) <runs-on>: Change from
+	ubuntu-20.04 to ubuntu-latest.
+
+2022-07-01  Shreenidhi Shedi  <sshedi@vmware.com>
+
+	faillock: add support to print login failure info in legacy format.
+	pam_tally2 had a simple and minimalstic output to show login failure
+	info, new output of faillock makes the output look a bit complex and
+	doesn't show failure counts in a straight manner.
+
+	This patch fixes the above issue by adding "--legacy-output" flag to
+	faillock which makes it possible to get output in pam_tally2 style.
+
+2022-07-01  Shreenidhi Shedi  <sshedi@vmware.com>
+
+	faillock: refactor faillock info printing code.
+	Move the code to it's own function.
+
+2022-07-01  Shreenidhi Shedi  <sshedi@vmware.com>
+
+	faillock: error out if user does not exist.
+	No need to do any further processing if a non existent username is given
+	to faillock.
+
+	For first time successful login, failure field should be 0 and faillock
+	should show something like pam_tally2 did.
+
+2022-06-30  Per Jessen  <per@jessen.ch>
+
+	pam_motd: do not rely on all filesystems providing a filetype.
+	When using scandir() to look for MOTD files to display, we wrongly
+	relied on all filesystems providing a filetype.  This is a fix to divert
+	to lstat() when we have no filetype.  To maintain MT safety, it isn't
+	possible to use lstat() in the scandir() filter function, so all of the
+	filtering has been moved to an additional loop after scanning all the
+	motd dirs.
+	Also, remove superfluous alphasort from scandir(), we are doing
+	a qsort() later.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/455
+
+2022-06-30  Stefan Schubert  <schubi@suse.de>
+
+	pam_namespace: use vendor specific namespace.conf and namespace.init as fallback
+	Use the vendor directory as fallback for a distribution provided default
+	config and scripts if there is no configuration in /etc.
+
+	pam_namespace.c: Take care about the fallback configuration in vendor directory.
+	pam_namespace.h: Define vendor specific files and directories.
+	pam_namespace.8.xml: Add description for vendor directories and files.
+	namespace.conf.5.xml: Add description for vendor directories and files.
+
+2022-06-30  Stefan Schubert  <schubi@suse.de>
+
+	pam_limits: use vendor specific content in limits.d directory as fallback
+	Use the vendor directory as fallback for a distribution provided default
+	config if there is no configuration in /etc.
+
+	pam_limits.c: Take care about the fallback configuration in vendor directory.
+	pam_limits.8.xml: Add description for vendor directory.
+
+2022-06-30  Stefan Schubert  <schubi@suse.de>
+
+	pam_access: use vendor specific access.conf as fallback.
+	Use the vendor directory as fallback for a distribution provided default config if there is no configuration in /etc.
+
+	* pam_access.c: Take care about the fallback configuration in vendor directory.
+	* pam_access.8.xml: Added description for vendor directory.
+
+2022-06-19  Dmitry V. Levin  <ldv@altlinux.org>
+
+	.github: add a few vendordir enabled jobs.
+	* .github/workflows/ci.yml (gcc11-x86_64-vendordir,
+	clang12-x86_64-vendordir, gcc11-x86-vendordir): New jobs.
+
+	ci: add vendor directory configuration support.
+	* ci/run-build-and-tests.sh: Configure using --enable-vendordir option
+	when VENDORDIR environment variable is set.
+
+2022-05-24  liaohanqin  <liaohanqin@uniontech.com>
+
+	doc: add pam_faillock module to SAG.
+
+2022-05-24  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	faillock: load configuration from file.
+	* modules/pam_faillock/main.c: Load configuration from file
+	* modules/pam_faillock/pam_faillock: Improve tally directory management
+	* modules/pam_faillock/faillock_config.c: Print errors
+	* modules/pam_faillock/faillock_config.h: Extend options structure and
+	define get_tally_dir().
+	* modules/pam_faillock/Makefile.am: Compile faillock_config.c for
+	faillock binary.
+	* modules/pam_faillock/faillock.8.xml: Update with the new configuration
+	option.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=1978029
+
+2022-05-24  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_faillock: move config to its own file.
+	The configuration load can be reused by faillock.
+
+	* modules/pam_faillock/faillock_config.c: Move configuration loading
+	functions (read_config_file and set_conf_opt) to this file.
+	* modules/pam_faillock/faillock_config.h: Move configuration loading
+	macros and structures.
+	* modules/pam_faillock/Makefile.am: Add faillock_config.
+	* modules/pam_faillock/faillock.h: Remove configuration loading macros.
+	* modules/pam_faillock/pam_faillock.c: Remove configuration loading
+	functions, macros and structures.
+
+2022-04-24  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_env: reorder definitions of static functions to avoid forward declarations
+	* modules/pam_env/pam_env.c (_assemble_line, _parse_line, _check_var,
+	_clean_var, _expand_arg, _pam_get_item_byname, _define_var,
+	_undefine_var): Move definitions of static functions before their first
+	use to avoid forward declarations cluttering the code.
+
+	pam_issue: reorder definitions of static functions to avoid forward declarations
+	* modules/pam_issue/pam_issue.c (read_issue_raw, read_issue_quoted):
+	Move definitions of static functions before their first use to avoid
+	forward declarations cluttering the code.
+
+2022-04-18  A S Alam  <amanpreet.alam@gmail.com>
+
+	po: update translations using Weblate (Punjabi)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/pa/
+
+2022-04-18  Seong-ho Cho  <darkcircle.0426@gmail.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2022-03-11  Stefan Schubert  <schubi@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_env: add a test of return values.
+	* modules/pam_env/tst-pam_env-retval.c: New file.
+	* modules/pam_env/Makefile.am (TESTS): Add $(check_PROGRAMS).
+	(check_PROGRAMS, tst_pam_env_retval_LDADD): New variables.
+
+2022-03-11  Thorsten Kukuk  <kukuk@suse.com>
+
+	pam_access: handle hostnames in access.conf.
+	According to the manual page, the following entry is valid but does not
+	work:
+	-:root:ALL EXCEPT localhost
+
+	See https://bugzilla.suse.com/show_bug.cgi?id=1019866
+
+	Patched is based on PR#226 from Josef Moellers
+
+2022-02-24  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_exec: remove redundant free() invocations.
+	In the child process, freeing memory right before pam_syslog()
+	followed by _exit(ENOMEM) is useless.
+
+	* modules/pam_exec/pam_exec.c (call_exec): Do not call free(envlist).
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/444
+
+2022-02-24  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_exec: remove redundant strdup.
+	In the child process, the elements of argv[] are not modified, so there
+	is no need to copy strings.
+
+	* modules/pam_exec/pam_exec.c (call_exec): Do not call strdup on argv[]
+	elements during arggv[] initialization.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/446
+
+2022-02-24  Thorsten Kukuk  <kukuk@suse.com>
+
+	pam_nologin: don't print empty message.
+
+2022-02-21  Stefan Schubert  <schubi@suse.de>
+
+	pam_time: fix clang compilation warning.
+	Fix the following compilation warning reported by clang:
+	"result of comparison against a string literal is unspecified
+	(use strcmp instead)".
+
+	* pam_time.c (_pam_parse): Do not compare char* string with a constant.
+
+2022-02-21  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_usertype: only use SYS_UID_MAX for system users.
+	* modules/pam_usertype/pam_usertype.c (pam_usertype_is_system): Stop
+	using SYS_UID_MIN to check if it is a system account, because all
+	accounts below the SYS_UID_MAX are system users.
+	* modules/pam_usertype/pam_usertype.8.xml: Remove reference to SYS_UID_MIN
+	as it is no longer used to calculate the system accounts.
+	* configure.ac: Remove PAM_USERTYPE_SYSUIDMIN.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=1949137
+
+2022-02-21  Iker Pedrosa  <ipedrosa@redhat.com>
+
+	pam_keyinit: thread-safe implementation.
+	* modules/pam_keyinit/pam_keyinit.c: Bypass setre*id() C library calls
+	with kernel calls and change global variables definitions to be
+	thread-safe.
+
+	Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=1997969
+	Co-Authored-By: Andreas Schneider <asn@samba.org>
+
+2022-02-09  pan chenbo  <panchenbo@uniontech.com>
+
+	po: update translations using Weblate (Chinese (Simplified) (zh_CN))
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/zh_CN/
+
+2022-02-09  Gogo Gogsi  <linux.hr@protonmail.com>
+
+	po: update translations using Weblate (Croatian)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/hr/
+
+2022-02-09  Emilio Herrera  <ehespinosa57@gmail.com>
+
+	po: update translations using Weblate (Spanish)
+	Currently translated at 82.0% (82 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/es/
+
+2022-02-09  simmon  <simmon@nplob.com>
+
+	po: update translations using Weblate (Korean)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ko/
+
+2022-02-09  Ondrej Sulek  <feonsu@gmail.com>
+
+	po: update translations using Weblate (Slovak)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/sk/
+
+2022-02-09  chong gao  <zhuzaifangxuele@gmail.com>
+
+	po: update translations using Weblate (Chinese (Hong Kong) (zh_HK))
+	Currently translated at 1.0% (1 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/zh_HK/
+
+2022-02-09  Tomohiro KATO  <tomop@teamgedoh.net>
+
+	po: update translations using Weblate (Japanese)
+	Currently translated at 100.0% (100 of 100 strings).
+
+	Translate-URL: https://translate.fedoraproject.org/projects/linux-pam/master/ja/
+
+2022-02-08  Stefan Schubert  <schubi@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_time: use vendor specific time.conf as fallback.
+	Use the vendor directory defined by --enable-vendordir=DIR configure
+	option as fallback for the distribution provided default config file
+	if there is no configuration in /etc.
+
+	* modules/pam_time/pam_time.8.xml: Describe this.
+	* modules/pam_time/time.h [VENDOR_SCONFIGDIR] (VENDOR_PAM_TIME_CONF):
+	New macro.
+	* modules/pam_time/pam_time.c (_pam_parse) [VENDOR_PAM_TIME_CONF]:
+	Try to open VENDOR_PAM_TIME_CONF file when no conffile= option was
+	specified and PAM_TIME_CONF file does not exist.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/409
+
+2022-02-08  Stefan Schubert  <schubi@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_time: add a test of return values.
+	* modules/pam_time/tst-pam_time-retval.c: New file.
+	* modules/pam_time/Makefile.am (TESTS): Add $(check_PROGRAMS).
+	(check_PROGRAMS, tst_pam_time_retval_LDADD): New variables.
+
+2022-02-07  Martyn Welch  <martyn@welchs.me.uk>
+
+	pam_pwhistory: Enable alternate location for password history file (#396)
+	Sometimes, especially in embedded devices, the /etc directory can be
+	read-only and/or not saved over upgrades. In order to ensure password
+	policies are maintained across upgrades and the module functions on
+	read-only file systems, allow the location of the password history file
+	to be set in the PAM configuration.
+	
+	Signed-off-by: Edward <jinzhou.zhu1@ge.com>
+	[Martyn Welch: Updated commit message and ported to latest version]
+	Signed-off-by: Martyn Welch <martyn.welch@collabora.com>
+
+2022-02-04  Jakov Smolić  <jsmolic@gentoo.org>
+
+	libpam: Fix undefined reference to `libintl_dgettext` on musl.
+	* libpam/Makefile.am (libpam_la_LIBADD): Add @LTLIBINTL@.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/433
+
+2022-02-04  Stefan Schubert  <schubi@suse.de>
+
+	pam_faillock: add a test of return values.
+	* modules/pam_faillock/tst-pam_faillock-retval.c: New file.
+	* modules/pam_faillock/Makefile.am (TESTS): Add $(check_PROGRAMS).
+	(check_PROGRAMS, tst_pam_faillock_retval_LDADD): New variables.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/431
+
+2022-02-01  Stefan Schubert  <schubi@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_faillock: use vendor specific faillock.conf as fallback.
+	Use the vendor directory defined by --enable-vendordir=DIR configure
+	option as fallback for the distribution provided default config file
+	if there is no configuration in /etc.
+
+	* modules/pam_faillock/pam_faillock.8.xml: Describe this.
+	* modules/pam_faillock/faillock.h [VENDOR_SCONFIGDIR]
+	(VENDOR_FAILLOCK_DEFAULT_CONF): New macro.
+	* modules/pam_faillock/pam_faillock.c (read_config_file)
+	[VENDOR_FAILLOCK_DEFAULT_CONF]: Try to open VENDOR_FAILLOCK_DEFAULT_CONF
+	file when FAILLOCK_DEFAULT_CONF file does not exist.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/423
+
+2022-01-25  Stefan Schubert  <schubi@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_group: use vendor specific group.conf as fallback.
+	Use the vendor directory defined by --enable-vendordir=DIR configure
+	option as fallback for the distribution provided default config file
+	if there is no configuration in /etc.
+
+	* modules/pam_group/pam_group.c: Include <errno.h>.
+	[VENDOR_SCONFIGDIR] (VENDOR_PAM_GROUP_CONF): New macro.
+	(read_field): Add conf_filename argument, use it instead of PAM_GROUP_CONF.
+	(check_account) <conf_filename>: New variable, initialize it to
+	PAM_GROUP_CONF, pass it to read_field().
+	[VENDOR_PAM_GROUP_CONF]: Assign VENDOR_PAM_GROUP_CONF to conf_filename
+	when PAM_GROUP_CONF file does not exist.
+	* modules/pam_group/pam_group.8.xml: Describe it.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/412
+
+2022-01-24  Stefan Schubert  <schubi@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_sepermit: use vendor specific sepermit.conf as fallback.
+	Use the vendor directory defined by --enable-vendordir=DIR configure
+	option as fallback for the distribution provided default config file
+	if there is no configuration in /etc.
+
+	* modules/pam_sepermit/pam_sepermit.c [VENDOR_SCONFIGDIR]
+	(SEPERMIT_VENDOR_CONF_FILE): New macro.
+	(pam_sm_authenticate) [SEPERMIT_VENDOR_CONF_FILE]: Use it as default
+	config file when conf= option is not specified and the file pointed
+	by SEPERMIT_CONF_FILE does not exist.
+	* modules/pam_sepermit/pam_sepermit.8.xml: Describe it.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/411
+
+2022-01-24  Dmitry V. Levin  <ldv@altlinux.org>
+
+	Drop Travis CI support.
+	The last build of Linux-PAM by travis-ci.org was in March of 2020,
+	and travis-ci.org says that all building is ceased since June of 2021.
+
+	Given that in foreseeable future travis-ci.com is not going to welcome
+	free software projects, there is no use to keep Travis CI support
+	in the tree.
+
+	* .travis.yml: Remove.
+
+	Link: https://blog.travis-ci.com/2020-11-02-travis-ci-new-billing
+
+2022-01-24  Dmitry V. Levin  <ldv@altlinux.org>
+
+	ci: add a git status check.
+	* ci/run-build-and-tests.sh: Check that "git status" does not report
+	any untracked files.
+
+	Update .gitignore file.
+	* .gitignore: Add Make.xml.rules.
+
+2022-01-23  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_limits: use VENDOR_SCONFIGDIR macro.
+	* modules/pam_limits/pam_limits.c (parse_config_file): Use
+	VENDOR_SCONFIGDIR macro instead of VENDORDIR.
+
+2022-01-23  Dmitry V. Levin  <ldv@altlinux.org>
+
+	Introduce VENDOR_SCONFIGDIR macro.
+	This is a VENDORDIR version of SCONFIGDIR macro, defined to
+	VENDORDIR"/security" when --enable-vendordir is used for build.
+
+	* configure.ac (AC_DEFINE_UNQUOTED): Add VENDOR_SCONFIGDIR.
+
+2022-01-23  Dmitry V. Levin  <ldv@altlinux.org>
+
+	modules: move SCONFIGDIR-based macro definitions from Makefile.am to the source code
+	Since SCONFIGDIR macro is available, the is no need to define macros
+	based on SCONFIGDIR in Makefile.am files.
+
+	* modules/pam_access/Makefile.am (AM_CFLAGS): Move definitions of
+	PAM_ACCESS_CONFIG and ACCESS_CONF_GLOB macros ...
+	* modules/pam_access/pam_access.c: ... here.
+	* modules/pam_env/Makefile.am (AM_CFLAGS): Move definition of
+	DEFAULT_CONF_FILE macro ...
+	* modules/pam_env/pam_env.c: ... here.
+	* modules/pam_group/Makefile.am (AM_CFLAGS): Move definition of
+	PAM_GROUP_CONF macro ...
+	* modules/pam_group/pam_group.c: ... here.
+	* modules/pam_limits/Makefile.am (AM_CFLAGS): Move definition of
+	LIMITS_FILE macro ...
+	* modules/pam_limits/pam_limits.c: ... here.
+	* modules/pam_sepermit/Makefile.am (AM_CFLAGS): Move definition of
+	SEPERMIT_CONF_FILE macro ...
+	* modules/pam_sepermit/pam_sepermit.c: ... here.
+	* modules/pam_time/Makefile.am (AM_CFLAGS): Move definition of
+	PAM_TIME_CONF macro ...
+	* modules/pam_time/pam_time.c: ... here.
+
+2022-01-23  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_limits: make LIMITS_FILE_DIR macro consistent.
+	LIMITS_FILE_DIR used to define a glob pattern instead of a directory
+	name, fix that inconsistency.
+
+	* modules/pam_limits/Makefile.am (AM_CFLAGS): Move "/*.conf" ending of
+	LIMITS_FILE_DIR macro ...
+	* modules/pam_limits/pam_limits.c (LIMITS_CONF_GLOB): ... here.
+
+2022-01-23  Dmitry V. Levin  <ldv@altlinux.org>
+
+	modules: use SCONFIGDIR macro.
+	Use SCONFIGDIR macro instead of open-coding "/etc/security",
+	the latter is not correct when configured using --enable-sconfigdir
+	with an argument different from /etc/security.
+
+	* modules/pam_faillock/faillock.h (FAILLOCK_DEFAULT_CONF): Use
+	SCONFIGDIR.
+	* modules/pam_namespace/pam_namespace.h (SECURECONF_DIR): Remove.
+	(PAM_NAMESPACE_CONFIG, NAMESPACE_INIT_SCRIPT, NAMESPACE_D_DIR,
+	NAMESPACE_D_GLOB): Use SCONFIGDIR.
+	* modules/pam_namespace/Makefile.am (AM_CFLAGS): Remove
+	-DSECURECONF_DIR.
+	* modules/pam_pwhistory/opasswd.c (OLD_PASSWORDS_FILE): Use SCONFIGDIR.
+	* modules/pam_unix/passverify.h: Likewise.
+	* modules/pam_unix/passverify.c (OPW_TMPFILE): Use SCONFIGDIR.
+
+2022-01-23  Dmitry V. Levin  <ldv@altlinux.org>
+
+	Introduce SCONFIGDIR macro.
+	Follow the VENDORDIR example and introduce a macro defined to the
+	argument of --enable-sconfigdir option.  Unlike --enable-vendordir,
+	--enable-sconfigdir has a default value, so when --enable-sconfigdir
+	is not used for build, SCONFIGDIR will be defined to that default value.
+
+	* configure.ac (AC_DEFINE_UNQUOTED): Add SCONFIGDIR.
+
+2022-01-22  Dmitry V. Levin  <ldv@altlinux.org>
+	    Stefan Schubert  <schubi@suse.de>
+
+	pam_sepermit: fix conf= option support.
+	The parser of conf= option failed to recognize the option unless
+	it was specified without an argument, making it useless.
+
+	* modules/pam_sepermit/pam_sepermit.c: Include "pam_inline.h".
+	(pam_sm_authenticate): Fix parsing of conf= option.
+	* modules/pam_sepermit/tst-pam_sepermit-retval.c: Check conf= option.
+
+	Resolves: https://github.com/linux-pam/linux-pam/pull/429
+
+2022-01-22  Dmitry V. Levin  <ldv@altlinux.org>
+
+	pam_sepermit: add a basic test for return values.
+	* modules/pam_sepermit/tst-pam_sepermit-retval.c: New file.
+	* modules/pam_sepermit/Makefile.am (TESTS): Add $(check_PROGRAMS).
+	(check_PROGRAMS, tst_pam_sepermit_retval_LDADD): New variables.
+
+2022-01-18  liaohanqin  <liaohanqin@gmail.com>
+
+	Update xsh.c.
+	fix: typing error
+
+2022-01-14  planc  <hubenchang0515@outlook.com>
+
+	Add a conversation function example.
+	* examples/Makefile.am: Add tty_conv to noinst_PROGRAMS
+	* examples/tty_conv.c: A new example of conversation function.
+
+2022-01-14  Thorsten Kukuk  <5908016+thkukuk@users.noreply.github.com>
+
+	pam_limits: adjust docu if config file is missing (#426)
+	This adjustes the documentation for the changes from PR#418
+	We no longer fail if the config file does not exist.
+
+2022-01-13  Stefan Schubert  <schubi@suse.de>
+
+	pam_rootok: fix compilation warning when HAVE_LIBAUDIT is not defined.
+	* modules/pam_rootok/pam_rootok.c (log_callback): Move audit_fd
+	definition under HAVE_LIBAUDIT guard.
+
+2022-01-13  Ludwig Nussel  <ludwig.nussel@suse.de>
+
+	pam_limits: don't fail on missing config files (#418)
+	A config with only comments or an empty one is completely fine for
+	pam_limits. So don't complain about missing config files either.
+
+2022-01-12  pyllyukko  <pyllyukko@maimed.org>
+
+	Check the return value of localtime in faillock (#421)
+
+2022-01-06  Dmitry V. Levin  <ldv@altlinux.org>
+
+	README: fix typo.
+	* README: Rename install_dependencies.sh to install-dependencies.sh.
+
+	Fixes: v1.4.0~211 ("Adjust README with instructions for package prerequsities")
+
+2021-11-24  Mingli Yu  <mingli.yu@windriver.com>
+
+	run-xtests.sh: check whether files exist.
+	Fixes:
+	 # ./run-xtests.sh . tst-pam_access1
+	 mv: cannot stat '/etc/security/opasswd': No such file or directory
+	 PASS: tst-pam_access1
+	 mv: cannot stat '/etc/security/opasswd-pam-xtests': No such file or directory
+	 ==================
+	 1 tests passed
+	 0 tests not run
+	 ==================
+
+2021-11-24  Dmitry V. Levin  <ldv@altlinux.org>
+
+	modules/pam_limits: fix build with old Linux kernel headers.
+	As PR_SET_NO_NEW_PRIVS was introduced by Linux kernel commit
+	v3.5-rc1~161^2~37, provide a fallback definition to fix build
+	with older Linux kernel headers.
+
+	* modules/pam_limits/pam_limits.c [!PR_SET_NO_NEW_PRIVS]
+	(PR_SET_NO_NEW_PRIVS): New macro.
+
+	Resolves: https://github.com/linux-pam/linux-pam/issues/406
+	Fixes: dd9cf929 ("modules/pam_limits: add support for nonewprivs")
+
+2021-11-03  Thorsten Kukuk  <5908016+thkukuk@users.noreply.github.com>
+
+	Use vendor specific limits.conf as fallback (#402)
+	* Use vendor specific limits.conf as fallback
+
+2021-11-02  Thorsten Kukuk  <5908016+thkukuk@users.noreply.github.com>
+
+	Only include vendordir in manual page if set (#401)
+
+	Include pam_xauth_data.3.xml in source archive (#400)
+
 2021-09-03  Dmitry V. Levin  <ldv@altlinux.org>
 
 	Fix a typo found using codespell tool.

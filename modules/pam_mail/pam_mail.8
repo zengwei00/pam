@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_mail
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_MAIL" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_MAIL" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,17 +49,17 @@ format\&.
 .SH "OPTIONS"
 .PP
 .PP
-\fBclose\fR
+close
 .RS 4
 Indicate if the user has any mail also on logout\&.
 .RE
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBdir=\fR\fB\fImaildir\fR\fR
+dir=maildir
 .RS 4
 Look for the user\*(Aqs mail in an alternative location defined by
 maildir/<login>\&. The default location for mail is
@@ -68,12 +68,12 @@ maildir
 is prefixed by a \*(Aq~\*(Aq, the directory is interpreted as indicating a file in the user\*(Aqs home directory\&.
 .RE
 .PP
-\fBempty\fR
+empty
 .RS 4
 Also print message if user has no mail\&.
 .RE
 .PP
-\fBhash=\fR\fB\fIcount\fR\fR
+hash=count
 .RS 4
 Mail directory hash depth\&. For example, a
 \fIhashcount\fR
@@ -81,26 +81,26 @@ of 2 would make the mail file be
 /var/spool/mail/u/s/user\&.
 .RE
 .PP
-\fBnoenv\fR
+noenv
 .RS 4
 Do not set the
 \fBMAIL\fR
 environment variable\&.
 .RE
 .PP
-\fBnopen\fR
+nopen
 .RS 4
 Don\*(Aqt print any mail information on login\&. This flag is useful to get the
 \fBMAIL\fR
 environment variable set, but to not display any information about it\&.
 .RE
 .PP
-\fBquiet\fR
+quiet
 .RS 4
 Only report when there is new mail\&.
 .RE
 .PP
-\fBstandard\fR
+standard
 .RS 4
 Old style "You have\&.\&.\&." format which doesn\*(Aqt show the mail spool being used\&. This also implies "empty"\&.
 .RE

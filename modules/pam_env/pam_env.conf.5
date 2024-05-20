@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_env.conf
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_ENV\&.CONF" "5" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_ENV\&.CONF" "5" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,7 @@ The
 file specifies the environment variables to be set, unset or modified by
 \fBpam_env\fR(8)\&. When someone logs in, this file is read and the environment variables are set according\&.
 .PP
-Each line starts with the variable name, there are then two possible options for each variable DEFAULT and OVERRIDE\&. DEFAULT allows an administrator to set the value of the variable to some default value, if none is supplied then the empty string is assumed\&. The OVERRIDE option tells pam_env that it should enter in its value (overriding the default value) if there is one to use\&. OVERRIDE is not used, "" is assumed and no override will be done\&.
+Each line starts with the variable name, there are then two possible options for each variable DEFAULT and OVERRIDE\&. DEFAULT allows an administrator to set the value of the variable to some default value, if none is supplied then the empty string is assumed\&. The OVERRIDE option tells pam_env that it should enter in its value (overriding the default value) if there is one to use\&. When OVERRIDE is not used, "" is assumed and no override will be done\&.
 .PP
 \fIVARIABLE\fR
 [\fIDEFAULT=[value]\fR] [\fIOVERRIDE=[value]\fR]

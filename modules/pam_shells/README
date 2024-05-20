@@ -7,7 +7,11 @@ DESCRIPTION
 pam_shells is a PAM module that only allows access to the system if the user's
 shell is listed in /etc/shells.
 
-It also checks if /etc/shells is a plain file and not world writable.
+If this file does not exist, entries are taken from files %vendordir%/shells,
+%vendordir%/shells.d/* and /etc/shells.d/* in that order.
+
+It also checks if needed files (e.g. /etc/shells) are plain files and not world
+writable.
 
 OPTIONS
 

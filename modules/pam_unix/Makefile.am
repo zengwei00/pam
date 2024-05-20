@@ -5,7 +5,7 @@
 CLEANFILES = *~
 MAINTAINERCLEANFILES = $(MANS) README
 
-EXTRA_DIST = md5.c md5_crypt.c lckpwdf.-c $(XMLS) CHANGELOG
+EXTRA_DIST = md5.c md5_crypt.c lckpwdf.-c yppasswd_xdr.c $(XMLS) CHANGELOG
 
 if HAVE_DOC
 dist_man_MANS = pam_unix.8 unix_chkpwd.8 unix_update.8
@@ -15,7 +15,11 @@ dist_check_SCRIPTS = tst-pam_unix
 TESTS = $(dist_check_SCRIPTS)
 
 securelibdir = $(SECUREDIR)
+if HAVE_VENDORDIR
+secureconfdir = $(VENDOR_SCONFIGDIR)
+else
 secureconfdir = $(SCONFIGDIR)
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/libpam/include -I$(top_srcdir)/libpamc/include \
 	-DCHKPWD_HELPER=\"$(sbindir)/unix_chkpwd\" \
@@ -39,7 +43,10 @@ noinst_PROGRAMS = bigcrypt
 
 pam_unix_la_SOURCES = bigcrypt.c pam_unix_acct.c \
 	pam_unix_auth.c pam_unix_passwd.c pam_unix_sess.c support.c \
-	passverify.c yppasswd_xdr.c md5_good.c md5_broken.c
+	passverify.c md5_good.c md5_broken.c
+if HAVE_NIS
+  pam_unix_la_SOURCES += yppasswd_xdr.c
+endif
 
 bigcrypt_SOURCES = bigcrypt.c bigcrypt_main.c
 bigcrypt_CFLAGS = $(AM_CFLAGS)

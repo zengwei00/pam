@@ -7,7 +7,7 @@ DESCRIPTION
 pam_securetty is a PAM module that allows root logins only if the user is
 logging in on a "secure" tty, as defined by the listing in the securetty file.
 pam_securetty checks at first, if /etc/securetty exists. If not and it was
-built with vendordir support, it will use <vendordir>/securetty. pam_securetty
+built with vendordir support, it will use %vendordir%/securetty. pam_securetty
 also checks that the securetty files are plain files and not world writable. It
 will also allow root logins on the tty specified with console= switch on the
 kernel command line and on ttys from the /sys/class/tty/console/active.

@@ -15,6 +15,18 @@ concatenated together in the order of parsing. If a config file is explicitly
 specified with a module option then the files in the above directory are not
 parsed.
 
+By default limits are taken from the /etc/security/limits.conf config file or,
+if that one is not present, the file %vendordir%/security/limits.conf. Then
+individual *.conf files from the /etc/security/limits.d/ and %vendordir%/
+security/limits.d directories are read. If /etc/security/limits.d/
+@filename@.conf exists, then %vendordir%/security/limits.d/@filename@.conf will
+not be used. All limits.d/*.conf files are sorted by their @filename@.conf in
+lexicographic order regardless of which of the directories they reside in. The
+effect of the individual files is the same as if all the files were
+concatenated together in the order of parsing. If a config file is explicitly
+specified with the config option the files in the above directories are not
+parsed.
+
 The module must not be called by a multithreaded application.
 
 If Linux PAM is compiled with audit support the module will report when it

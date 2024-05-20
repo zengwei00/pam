@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_get_authtok
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_GET_AUTHTOK" "3" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM_GET_AUTHTOK" "3" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -109,26 +109,26 @@ be
 \fBpam_get_authtok\fR
 honours the following module options:
 .PP
-\fBtry_first_pass\fR
+try_first_pass
 .RS 4
 Before prompting the user for their password, the module first tries the previous stacked module\*(Aqs password in case that satisfies this module as well\&.
 .RE
 .PP
-\fBuse_first_pass\fR
+use_first_pass
 .RS 4
 The argument
 \fBuse_first_pass\fR
 forces the module to use a previous stacked modules password and will never prompt the user \- if no password is available or the password is not appropriate, the user will be denied access\&.
 .RE
 .PP
-\fBuse_authtok\fR
+use_authtok
 .RS 4
 When password changing enforce the module to set the new token to the one provided by a previously stacked
 \fBpassword\fR
 module\&. If no token is available token changing will fail\&.
 .RE
 .PP
-\fBauthtok_type=\fR\fB\fIXXX\fR\fR
+authtok_type=XXX
 .RS 4
 The default action is for the module to use the following prompts when requesting passwords: "New UNIX password: " and "Retype UNIX password: "\&. The example word
 \fIUNIX\fR

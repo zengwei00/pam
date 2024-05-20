@@ -18,6 +18,20 @@ of parsing. This means that once a pattern is matched in some file no further
 files are parsed. If a config file is explicitly specified with the accessfile
 option the files in the above directory are not parsed.
 
+By default rules for access management are taken from config file /etc/security
+/access.conf or, if that one is not present, the file %vendordir%/security/
+access.conf. These settings can be overruled by setting in a config file
+explicitly specified with the accessfile option. Then individual *.conf files
+from the /etc/security/access.d/ and %vendordir%/security/access.d directories
+are read. If /etc/security/access.d/@filename@.conf exists, then %vendordir%/
+security/access.d/@filename@.conf will not be used. All access.d/*.conf files
+are sorted by their @filename@.conf in lexicographic order regardless of which
+of the directories they reside in. The effect of the individual files is the
+same as if all the files were concatenated together in the order of parsing.
+This means that once a pattern is matched in some file no further files are
+parsed. If a config file is explicitly specified with the accessfile option the
+files in the above directories are not parsed.
+
 If Linux PAM is compiled with audit support the module will report when it
 denies access based on origin (host, tty, etc.).
 

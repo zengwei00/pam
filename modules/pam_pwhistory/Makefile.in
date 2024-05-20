@@ -98,6 +98,7 @@ build_triplet = @build@
 host_triplet = @host@
 @HAVE_VERSIONING_TRUE@am__append_1 = -Wl,--version-script=$(srcdir)/../modules.map
 sbin_PROGRAMS = pwhistory_helper$(EXEEXT)
+check_PROGRAMS = tst-pam_pwhistory-retval$(EXEEXT)
 subdir = modules/pam_pwhistory
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/attribute.m4 \
@@ -118,14 +119,15 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/attribute.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(dist_check_SCRIPTS) \
-	$(am__dist_noinst_DATA_DIST) $(noinst_HEADERS) \
-	$(am__DIST_COMMON)
+	$(am__dist_noinst_DATA_DIST) $(dist_secureconf_DATA) \
+	$(noinst_HEADERS) $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(securelibdir)" \
-	"$(DESTDIR)$(man8dir)"
+	"$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" \
+	"$(DESTDIR)$(secureconfdir)"
 PROGRAMS = $(sbin_PROGRAMS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -157,7 +159,8 @@ am__uninstall_files_from_dir = { \
 LTLIBRARIES = $(securelib_LTLIBRARIES)
 pam_pwhistory_la_DEPENDENCIES = $(top_builddir)/libpam/libpam.la
 am_pam_pwhistory_la_OBJECTS = pam_pwhistory_la-pam_pwhistory.lo \
-	pam_pwhistory_la-opasswd.lo
+	pam_pwhistory_la-opasswd.lo \
+	pam_pwhistory_la-pwhistory_config.lo
 pam_pwhistory_la_OBJECTS = $(am_pam_pwhistory_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -176,6 +179,10 @@ pwhistory_helper_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(pwhistory_helper_CFLAGS) $(CFLAGS) \
 	$(pwhistory_helper_LDFLAGS) $(LDFLAGS) -o $@
+tst_pam_pwhistory_retval_SOURCES = tst-pam_pwhistory-retval.c
+tst_pam_pwhistory_retval_OBJECTS = tst-pam_pwhistory-retval.$(OBJEXT)
+tst_pam_pwhistory_retval_DEPENDENCIES =  \
+	$(top_builddir)/libpam/libpam.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -193,8 +200,10 @@ depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/pam_pwhistory_la-opasswd.Plo \
 	./$(DEPDIR)/pam_pwhistory_la-pam_pwhistory.Plo \
+	./$(DEPDIR)/pam_pwhistory_la-pwhistory_config.Plo \
 	./$(DEPDIR)/pwhistory_helper-opasswd.Po \
-	./$(DEPDIR)/pwhistory_helper-pwhistory_helper.Po
+	./$(DEPDIR)/pwhistory_helper-pwhistory_helper.Po \
+	./$(DEPDIR)/tst-pam_pwhistory-retval.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -214,18 +223,21 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(pam_pwhistory_la_SOURCES) $(pwhistory_helper_SOURCES)
-DIST_SOURCES = $(pam_pwhistory_la_SOURCES) $(pwhistory_helper_SOURCES)
+SOURCES = $(pam_pwhistory_la_SOURCES) $(pwhistory_helper_SOURCES) \
+	tst-pam_pwhistory-retval.c
+DIST_SOURCES = $(pam_pwhistory_la_SOURCES) $(pwhistory_helper_SOURCES) \
+	tst-pam_pwhistory-retval.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+man5dir = $(mandir)/man5
 man8dir = $(mandir)/man8
 NROFF = nroff
 MANS = $(dist_man_MANS)
 am__dist_noinst_DATA_DIST = README
-DATA = $(dist_noinst_DATA)
+DATA = $(dist_noinst_DATA) $(dist_secureconf_DATA)
 HEADERS = $(noinst_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
@@ -453,6 +465,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOCBOOK_RNG = @DOCBOOK_RNG@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
@@ -465,11 +478,13 @@ EXEEXT = @EXEEXT@
 EXE_CFLAGS = @EXE_CFLAGS@
 EXE_LDFLAGS = @EXE_LDFLAGS@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 FO2PDF = @FO2PDF@
 GETTEXT_MACRO_VERSION = @GETTEXT_MACRO_VERSION@
 GMSGFMT = @GMSGFMT@
 GMSGFMT_015 = @GMSGFMT_015@
 GREP = @GREP@
+HTML_STYLESHEET = @HTML_STYLESHEET@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -501,12 +516,14 @@ LIBSELINUX = @LIBSELINUX@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
+LOGIND_CFLAGS = @LOGIND_CFLAGS@
 LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
+MAN_STYLESHEET = @MAN_STYLESHEET@
 MKDIR_P = @MKDIR_P@
 MSGFMT = @MSGFMT@
 MSGFMT_015 = @MSGFMT_015@
@@ -529,6 +546,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PDF_STYLESHEET = @PDF_STYLESHEET@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -539,12 +557,16 @@ SECUREDIR = @SECUREDIR@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-STRINGPARAM_HMAC = @STRINGPARAM_HMAC@
+STRINGPARAM_PROFILECONDITIONS = @STRINGPARAM_PROFILECONDITIONS@
 STRINGPARAM_VENDORDIR = @STRINGPARAM_VENDORDIR@
 STRIP = @STRIP@
+SYSTEMD_CFLAGS = @SYSTEMD_CFLAGS@
+SYSTEMD_LIBS = @SYSTEMD_LIBS@
 TIRPC_CFLAGS = @TIRPC_CFLAGS@
 TIRPC_LIBS = @TIRPC_LIBS@
+TXT_STYLESHEET = @TXT_STYLESHEET@
 USE_NLS = @USE_NLS@
+VENDOR_SCONFIGDIR = @VENDOR_SCONFIGDIR@
 VERSION = @VERSION@
 WARN_CFLAGS = @WARN_CFLAGS@
 XGETTEXT = @XGETTEXT@
@@ -613,26 +635,31 @@ top_srcdir = @top_srcdir@
 CLEANFILES = *~
 MAINTAINERCLEANFILES = $(MANS) README
 EXTRA_DIST = $(XMLS)
-@HAVE_DOC_TRUE@dist_man_MANS = pam_pwhistory.8 pwhistory_helper.8
-XMLS = README.xml pam_pwhistory.8.xml pwhistory_helper.8.xml
+@HAVE_DOC_TRUE@dist_man_MANS = pam_pwhistory.8 pwhistory_helper.8 pwhistory.conf.5
+XMLS = README.xml pam_pwhistory.8.xml pwhistory_helper.8.xml \
+  pwhistory.conf.5.xml
+
 dist_check_SCRIPTS = tst-pam_pwhistory
-TESTS = $(dist_check_SCRIPTS)
+TESTS = $(dist_check_SCRIPTS) $(check_PROGRAMS)
 securelibdir = $(SECUREDIR)
-secureconfdir = $(SCONFIGDIR)
+@HAVE_VENDORDIR_FALSE@secureconfdir = $(SCONFIGDIR)
+@HAVE_VENDORDIR_TRUE@secureconfdir = $(VENDOR_SCONFIGDIR)
 AM_CFLAGS = -I$(top_srcdir)/libpam/include -I$(top_srcdir)/libpamc/include \
 	$(WARN_CFLAGS) -DPWHISTORY_HELPER=\"$(sbindir)/pwhistory_helper\"
 
 pam_pwhistory_la_LDFLAGS = -no-undefined -avoid-version -module \
 	$(am__append_1)
-noinst_HEADERS = opasswd.h
+noinst_HEADERS = opasswd.h pwhistory_config.h
+dist_secureconf_DATA = pwhistory.conf
 securelib_LTLIBRARIES = pam_pwhistory.la
 pam_pwhistory_la_CFLAGS = $(AM_CFLAGS)
 pam_pwhistory_la_LIBADD = $(top_builddir)/libpam/libpam.la @LIBCRYPT@ @LIBSELINUX@
-pam_pwhistory_la_SOURCES = pam_pwhistory.c opasswd.c
+pam_pwhistory_la_SOURCES = pam_pwhistory.c opasswd.c pwhistory_config.c
 pwhistory_helper_CFLAGS = $(AM_CFLAGS) -DHELPER_COMPILE=\"pwhistory_helper\" @EXE_CFLAGS@
 pwhistory_helper_SOURCES = pwhistory_helper.c opasswd.c
 pwhistory_helper_LDFLAGS = @EXE_LDFLAGS@
 pwhistory_helper_LDADD = $(top_builddir)/libpam/libpam.la @LIBCRYPT@
+tst_pam_pwhistory_retval_LDADD = $(top_builddir)/libpam/libpam.la
 @ENABLE_REGENERATE_MAN_TRUE@dist_noinst_DATA = README
 all: all-am
 
@@ -667,6 +694,15 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+clean-checkPROGRAMS:
+	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 install-sbinPROGRAMS: $(sbin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(sbin_PROGRAMS)'; test -n "$(sbindir)" || list=; \
@@ -759,6 +795,10 @@ pwhistory_helper$(EXEEXT): $(pwhistory_helper_OBJECTS) $(pwhistory_helper_DEPEND
 	@rm -f pwhistory_helper$(EXEEXT)
 	$(AM_V_CCLD)$(pwhistory_helper_LINK) $(pwhistory_helper_OBJECTS) $(pwhistory_helper_LDADD) $(LIBS)
 
+tst-pam_pwhistory-retval$(EXEEXT): $(tst_pam_pwhistory_retval_OBJECTS) $(tst_pam_pwhistory_retval_DEPENDENCIES) $(EXTRA_tst_pam_pwhistory_retval_DEPENDENCIES) 
+	@rm -f tst-pam_pwhistory-retval$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tst_pam_pwhistory_retval_OBJECTS) $(tst_pam_pwhistory_retval_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -767,8 +807,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pam_pwhistory_la-opasswd.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pam_pwhistory_la-pam_pwhistory.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pam_pwhistory_la-pwhistory_config.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pwhistory_helper-opasswd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pwhistory_helper-pwhistory_helper.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tst-pam_pwhistory-retval.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -811,6 +853,13 @@ pam_pwhistory_la-opasswd.lo: opasswd.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pam_pwhistory_la_CFLAGS) $(CFLAGS) -c -o pam_pwhistory_la-opasswd.lo `test -f 'opasswd.c' || echo '$(srcdir)/'`opasswd.c
 
+pam_pwhistory_la-pwhistory_config.lo: pwhistory_config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pam_pwhistory_la_CFLAGS) $(CFLAGS) -MT pam_pwhistory_la-pwhistory_config.lo -MD -MP -MF $(DEPDIR)/pam_pwhistory_la-pwhistory_config.Tpo -c -o pam_pwhistory_la-pwhistory_config.lo `test -f 'pwhistory_config.c' || echo '$(srcdir)/'`pwhistory_config.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pam_pwhistory_la-pwhistory_config.Tpo $(DEPDIR)/pam_pwhistory_la-pwhistory_config.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pwhistory_config.c' object='pam_pwhistory_la-pwhistory_config.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pam_pwhistory_la_CFLAGS) $(CFLAGS) -c -o pam_pwhistory_la-pwhistory_config.lo `test -f 'pwhistory_config.c' || echo '$(srcdir)/'`pwhistory_config.c
+
 pwhistory_helper-pwhistory_helper.o: pwhistory_helper.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pwhistory_helper_CFLAGS) $(CFLAGS) -MT pwhistory_helper-pwhistory_helper.o -MD -MP -MF $(DEPDIR)/pwhistory_helper-pwhistory_helper.Tpo -c -o pwhistory_helper-pwhistory_helper.o `test -f 'pwhistory_helper.c' || echo '$(srcdir)/'`pwhistory_helper.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pwhistory_helper-pwhistory_helper.Tpo $(DEPDIR)/pwhistory_helper-pwhistory_helper.Po
@@ -844,6 +893,49 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-man5: $(dist_man_MANS)
+	@$(NORMAL_INSTALL)
+	@list1=''; \
+	list2='$(dist_man_MANS)'; \
+	test -n "$(man5dir)" \
+	  && test -n "`echo $$list1$$list2`" \
+	  || exit 0; \
+	echo " $(MKDIR_P) '$(DESTDIR)$(man5dir)'"; \
+	$(MKDIR_P) "$(DESTDIR)$(man5dir)" || exit 1; \
+	{ for i in $$list1; do echo "$$i"; done;  \
+	if test -n "$$list2"; then \
+	  for i in $$list2; do echo "$$i"; done \
+	    | sed -n '/\.5[a-z]*$$/p'; \
+	fi; \
+	} | while read p; do \
+	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; echo "$$p"; \
+	done | \
+	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^5][0-9a-z]*$$,5,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
+	sed 'N;N;s,\n, ,g' | { \
+	list=; while read file base inst; do \
+	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
+	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man5dir)/$$inst'"; \
+	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man5dir)/$$inst" || exit $$?; \
+	  fi; \
+	done; \
+	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
+	while read files; do \
+	  test -z "$$files" || { \
+	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man5dir)'"; \
+	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man5dir)" || exit $$?; }; \
+	done; }
+
+uninstall-man5:
+	@$(NORMAL_UNINSTALL)
+	@list=''; test -n "$(man5dir)" || exit 0; \
+	files=`{ for i in $$list; do echo "$$i"; done; \
+	l2='$(dist_man_MANS)'; for i in $$l2; do echo "$$i"; done | \
+	  sed -n '/\.5[a-z]*$$/p'; \
+	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^5][0-9a-z]*$$,5,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
+	dir='$(DESTDIR)$(man5dir)'; $(am__uninstall_files_from_dir)
 install-man8: $(dist_man_MANS)
 	@$(NORMAL_INSTALL)
 	@list1=''; \
@@ -887,6 +979,27 @@ uninstall-man8:
 	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^8][0-9a-z]*$$,8,;x' \
 	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
 	dir='$(DESTDIR)$(man8dir)'; $(am__uninstall_files_from_dir)
+install-dist_secureconfDATA: $(dist_secureconf_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_secureconf_DATA)'; test -n "$(secureconfdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(secureconfdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(secureconfdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(secureconfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(secureconfdir)" || exit $$?; \
+	done
+
+uninstall-dist_secureconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_secureconf_DATA)'; test -n "$(secureconfdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(secureconfdir)'; $(am__uninstall_files_from_dir)
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1060,7 +1173,7 @@ $(TEST_SUITE_LOG): $(TEST_LOGS)
 	fi;								\
 	$$success || exit 1
 
-check-TESTS: $(dist_check_SCRIPTS)
+check-TESTS: $(check_PROGRAMS) $(dist_check_SCRIPTS)
 	@list='$(RECHECK_LOGS)';           test -z "$$list" || rm -f $$list
 	@list='$(RECHECK_LOGS:.log=.trs)'; test -z "$$list" || rm -f $$list
 	@test -z "$(TEST_SUITE_LOG)" || rm -f $(TEST_SUITE_LOG)
@@ -1070,7 +1183,7 @@ check-TESTS: $(dist_check_SCRIPTS)
 	log_list=`echo $$log_list`; trs_list=`echo $$trs_list`; \
 	$(MAKE) $(AM_MAKEFLAGS) $(TEST_SUITE_LOG) TEST_LOGS="$$log_list"; \
 	exit $$?;
-recheck: all $(dist_check_SCRIPTS)
+recheck: all $(check_PROGRAMS) $(dist_check_SCRIPTS)
 	@test -z "$(TEST_SUITE_LOG)" || rm -f $(TEST_SUITE_LOG)
 	@set +e; $(am__set_TESTS_bases); \
 	bases=`for i in $$bases; do echo $$i; done \
@@ -1084,6 +1197,13 @@ recheck: all $(dist_check_SCRIPTS)
 tst-pam_pwhistory.log: tst-pam_pwhistory
 	@p='tst-pam_pwhistory'; \
 	b='tst-pam_pwhistory'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tst-pam_pwhistory-retval.log: tst-pam_pwhistory-retval$(EXEEXT)
+	@p='tst-pam_pwhistory-retval$(EXEEXT)'; \
+	b='tst-pam_pwhistory-retval'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1137,12 +1257,13 @@ distdir-am: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(dist_check_SCRIPTS)
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS) \
+	  $(dist_check_SCRIPTS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
 all-am: Makefile $(PROGRAMS) $(LTLIBRARIES) $(MANS) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(securelibdir)" "$(DESTDIR)$(man8dir)"; do \
+	for dir in "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(securelibdir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(secureconfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1182,14 +1303,16 @@ maintainer-clean-generic:
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-sbinPROGRAMS \
-	clean-securelibLTLIBRARIES mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
+	clean-sbinPROGRAMS clean-securelibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/pam_pwhistory_la-opasswd.Plo
 	-rm -f ./$(DEPDIR)/pam_pwhistory_la-pam_pwhistory.Plo
+	-rm -f ./$(DEPDIR)/pam_pwhistory_la-pwhistory_config.Plo
 	-rm -f ./$(DEPDIR)/pwhistory_helper-opasswd.Po
 	-rm -f ./$(DEPDIR)/pwhistory_helper-pwhistory_helper.Po
+	-rm -f ./$(DEPDIR)/tst-pam_pwhistory-retval.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1206,7 +1329,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-man install-securelibLTLIBRARIES
+install-data-am: install-dist_secureconfDATA install-man \
+	install-securelibLTLIBRARIES
 
 install-dvi: install-dvi-am
 
@@ -1222,7 +1346,7 @@ install-info: install-info-am
 
 install-info-am:
 
-install-man: install-man8
+install-man: install-man5 install-man8
 
 install-pdf: install-pdf-am
 
@@ -1237,8 +1361,10 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/pam_pwhistory_la-opasswd.Plo
 	-rm -f ./$(DEPDIR)/pam_pwhistory_la-pam_pwhistory.Plo
+	-rm -f ./$(DEPDIR)/pam_pwhistory_la-pwhistory_config.Plo
 	-rm -f ./$(DEPDIR)/pwhistory_helper-opasswd.Po
 	-rm -f ./$(DEPDIR)/pwhistory_helper-pwhistory_helper.Po
+	-rm -f ./$(DEPDIR)/tst-pam_pwhistory-retval.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1255,28 +1381,30 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-man uninstall-sbinPROGRAMS \
-	uninstall-securelibLTLIBRARIES
+uninstall-am: uninstall-dist_secureconfDATA uninstall-man \
+	uninstall-sbinPROGRAMS uninstall-securelibLTLIBRARIES
 
-uninstall-man: uninstall-man8
+uninstall-man: uninstall-man5 uninstall-man8
 
 .MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-TESTS \
-	check-am clean clean-generic clean-libtool clean-sbinPROGRAMS \
-	clean-securelibLTLIBRARIES cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic \
+	check-am clean clean-checkPROGRAMS clean-generic clean-libtool \
+	clean-sbinPROGRAMS clean-securelibLTLIBRARIES cscopelist-am \
+	ctags ctags-am distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-man8 install-pdf \
-	install-pdf-am install-ps install-ps-am install-sbinPROGRAMS \
+	install-data-am install-dist_secureconfDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-man5 install-man8 install-pdf install-pdf-am \
+	install-ps install-ps-am install-sbinPROGRAMS \
 	install-securelibLTLIBRARIES install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	recheck tags tags-am uninstall uninstall-am uninstall-man \
+	recheck tags tags-am uninstall uninstall-am \
+	uninstall-dist_secureconfDATA uninstall-man uninstall-man5 \
 	uninstall-man8 uninstall-sbinPROGRAMS \
 	uninstall-securelibLTLIBRARIES
 

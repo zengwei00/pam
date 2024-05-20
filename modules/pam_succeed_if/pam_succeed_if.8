@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_succeed_if
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
-.\"    Manual: Linux-PAM
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
+.\"    Manual: Linux-PAM Manual
 .\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_SUCCEED_IF" "8" "09/03/2021" "Linux-PAM" "Linux\-PAM"
+.TH "PAM_SUCCEED_IF" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,32 +42,32 @@ The module should be given one or more conditions as module arguments, and authe
 The following
 \fIflag\fRs are supported:
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Turns on debugging messages sent to syslog\&.
 .RE
 .PP
-\fBuse_uid\fR
+use_uid
 .RS 4
 Evaluate conditions using the account of the user whose UID the application is running under instead of the user being authenticated\&.
 .RE
 .PP
-\fBquiet\fR
+quiet
 .RS 4
 Don\*(Aqt log failure or success to the system log\&.
 .RE
 .PP
-\fBquiet_fail\fR
+quiet_fail
 .RS 4
 Don\*(Aqt log failure to the system log\&.
 .RE
 .PP
-\fBquiet_success\fR
+quiet_success
 .RS 4
 Don\*(Aqt log success to the system log\&.
 .RE
 .PP
-\fBaudit\fR
+audit
 .RS 4
 Log unknown users to the system log\&.
 .RE
@@ -86,82 +86,82 @@ Available fields are
 and
 \fIservice\fR:
 .PP
-\fBfield < number\fR
+field < number
 .RS 4
 Field has a value numerically less than number\&.
 .RE
 .PP
-\fBfield <= number\fR
+field <= number
 .RS 4
 Field has a value numerically less than or equal to number\&.
 .RE
 .PP
-\fBfield eq number\fR
+field eq number
 .RS 4
 Field has a value numerically equal to number\&.
 .RE
 .PP
-\fBfield >= number\fR
+field >= number
 .RS 4
 Field has a value numerically greater than or equal to number\&.
 .RE
 .PP
-\fBfield > number\fR
+field > number
 .RS 4
 Field has a value numerically greater than number\&.
 .RE
 .PP
-\fBfield ne number\fR
+field ne number
 .RS 4
 Field has a value numerically different from number\&.
 .RE
 .PP
-\fBfield = string\fR
+field = string
 .RS 4
 Field exactly matches the given string\&.
 .RE
 .PP
-\fBfield != string\fR
+field != string
 .RS 4
 Field does not match the given string\&.
 .RE
 .PP
-\fBfield =~ glob\fR
+field =~ glob
 .RS 4
 Field matches the given glob\&.
 .RE
 .PP
-\fBfield !~ glob\fR
+field !~ glob
 .RS 4
 Field does not match the given glob\&.
 .RE
 .PP
-\fBfield in item:item:\&.\&.\&.\fR
+field in item:item:\&.\&.\&.
 .RS 4
 Field is contained in the list of items separated by colons\&.
 .RE
 .PP
-\fBfield notin item:item:\&.\&.\&.\fR
+field notin item:item:\&.\&.\&.
 .RS 4
 Field is not contained in the list of items separated by colons\&.
 .RE
 .PP
-\fBuser ingroup group[:group:\&.\&.\&.\&.]\fR
+user ingroup group[:group:\&.\&.\&.\&.]
 .RS 4
 User is in given group(s)\&.
 .RE
 .PP
-\fBuser notingroup group[:group:\&.\&.\&.\&.]\fR
+user notingroup group[:group:\&.\&.\&.\&.]
 .RS 4
 User is not in given group(s)\&.
 .RE
 .PP
-\fBuser innetgr netgroup\fR
+user innetgr netgroup
 .RS 4
 (user,host) is in given netgroup\&.
 .RE
 .PP
-\fBuser notinnetgr group\fR
+user notinnetgr group
 .RS 4
 (user,host) is not in given netgroup\&.
 .RE

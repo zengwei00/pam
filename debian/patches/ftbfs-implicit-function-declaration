@@ -1,0 +1,23 @@
+From: Sam Hartman <hartmans@debian.org>
+Date: Mon, 8 Apr 2024 15:40:35 -0600
+Subject: Fix FTBFS when built with -Werror=implicit-function-declaration
+
+Bug-Ubuntu:  https://bugs.launchpad.net/bugs/2055453
+Forwarded:   no
+Last-Update: 2024-02-29
+---
+ modules/pam_unix/support.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/modules/pam_unix/support.h b/modules/pam_unix/support.h
+index e15ee98..9c065c5 100644
+--- a/modules/pam_unix/support.h
++++ b/modules/pam_unix/support.h
+@@ -6,6 +6,7 @@
+ #define _PAM_UNIX_SUPPORT_H
+ 
+ #include <pwd.h>
++#include "libpam/include/pam_inline.h"
+ 
+ /*
+  * File to read value of ENCRYPT_METHOD from.

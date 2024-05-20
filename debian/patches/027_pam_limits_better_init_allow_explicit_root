@@ -1,0 +1,268 @@
+From: Peter Paluch <peterp@frcatel.fri.utc.sk>
+Date: Mon, 11 Sep 2023 14:00:42 -0600
+Subject: Allow explicit limits for root and reset limits on each session
+
+Bug-Debian: http://bugs.debian.org/63230
+
+When crossing session boundaries (such as when su'ing from one user to
+another), if the target account has no limit specified in limits.conf we
+want to use the default, not the current value configured for the
+source account.
+
+If /proc/1/limits is unavailable, fall back to a set of hard-coded values
+that shadow the currently known defaults on Linux.
+
+Also, don't apply wildcard limits to the root account; only apply limits to
+root that reference root by name.
+===================================================================
+---
+ modules/pam_limits/README            |  1 +
+ modules/pam_limits/limits.conf       |  4 ++
+ modules/pam_limits/limits.conf.5     |  5 ++
+ modules/pam_limits/limits.conf.5.xml |  6 +++
+ modules/pam_limits/pam_limits.c      | 89 ++++++++++++++++++++++++++++++++----
+ 5 files changed, 96 insertions(+), 9 deletions(-)
+
+diff --git a/modules/pam_limits/README b/modules/pam_limits/README
+index 98264b9..dc560ef 100644
+--- a/modules/pam_limits/README
++++ b/modules/pam_limits/README
+@@ -68,6 +68,7 @@ These are some example lines which might be specified in /etc/security/
+ limits.conf.
+ 
+ *               soft    core            0
++root            hard    core            100000
+ *               hard    nofile          512
+ @student        hard    nproc           20
+ @faculty        soft    nproc           20
+diff --git a/modules/pam_limits/limits.conf b/modules/pam_limits/limits.conf
+index e8a746c..c6b058a 100644
+--- a/modules/pam_limits/limits.conf
++++ b/modules/pam_limits/limits.conf
+@@ -22,6 +22,9 @@
+ #        - the wildcard *, for default entry
+ #        - the wildcard %, can be also used with %group syntax,
+ #                 for maxlogin limit
++#        - NOTE: group and wildcard limits are not applied to root.
++#          To apply a limit to the root user, <domain> must be
++#          the literal username root.
+ #
+ #<type> can have the two values:
+ #        - "soft" for enforcing the soft limits
+@@ -51,6 +54,7 @@
+ #
+ 
+ #*               soft    core            0
++#root            hard    core            100000
+ #*               hard    rss             10000
+ #@student        hard    nproc           20
+ #@faculty        soft    nproc           20
+diff --git a/modules/pam_limits/limits.conf.5 b/modules/pam_limits/limits.conf.5
+index 25f4459..32c4b2f 100644
+--- a/modules/pam_limits/limits.conf.5
++++ b/modules/pam_limits/limits.conf.5
+@@ -145,6 +145,10 @@ a gid specified as
+ \fB%:\fR\fI<gid>\fR
+ applicable to maxlogins limit only\&. It limits the total number of logins of all users that are member of the group with the specified gid\&.
+ .RE
++.sp
++\fBNOTE:\fR
++group and wildcard limits are not applied to the root user\&. To set a limit for the root user, this field must contain the literal username
++\fBroot\fR\&.
+ .RE
+ .PP
+ <type>
+@@ -322,6 +326,7 @@ These are some example lines which might be specified in
+ .\}
+ .nf
+ *               soft    core            0
++root            hard    core            100000
+ *               hard    nofile          512
+ @student        hard    nproc           20
+ @faculty        soft    nproc           20
+diff --git a/modules/pam_limits/limits.conf.5.xml b/modules/pam_limits/limits.conf.5.xml
+index 2177da1..9f2662a 100644
+--- a/modules/pam_limits/limits.conf.5.xml
++++ b/modules/pam_limits/limits.conf.5.xml
+@@ -89,6 +89,11 @@
+               </para>
+             </listitem>
+           </itemizedlist>
++	  <para>
++	    <emphasis remap='B'>NOTE:</emphasis> group and wildcard limits are not
++	    applied to the root user.  To set a limit for the root user, this field
++	    must contain the literal username <emphasis remap='B'>root</emphasis>.
++	  </para>
+         </listitem>
+       </varlistentry>
+ 
+@@ -320,6 +325,7 @@
+     </para>
+     <programlisting>
+ *               soft    core            0
++root            hard    core            100000
+ *               hard    nofile          512
+ @student        hard    nproc           20
+ @faculty        soft    nproc           20
+diff --git a/modules/pam_limits/pam_limits.c b/modules/pam_limits/pam_limits.c
+index 87bb4b7..adda08b 100644
+--- a/modules/pam_limits/pam_limits.c
++++ b/modules/pam_limits/pam_limits.c
+@@ -47,10 +47,19 @@
+ #include <libaudit.h>
+ #endif
+ 
++
+ #ifndef PR_SET_NO_NEW_PRIVS
+ # define PR_SET_NO_NEW_PRIVS 38 /* from <linux/prctl.h> */
+ #endif
+ 
++#ifndef MLOCK_LIMIT
++#ifdef __FreeBSD_kernel__
++#define MLOCK_LIMIT RLIM_INFINITY
++#else
++#define MLOCK_LIMIT (64*1024)
++#endif
++#endif
++
+ /* Module defines */
+ #define LINE_LENGTH 1024
+ 
+@@ -88,6 +97,7 @@ struct user_limits_struct {
+ 
+ /* internal data */
+ struct pam_limit_s {
++    int root;            /* running as root? */
+     int login_limit;     /* the max logins limit */
+     int login_limit_def; /* which entry set the login limit */
+     int flag_numsyslogins; /* whether to limit logins only for a
+@@ -455,9 +465,18 @@ static int init_limits(pam_handle_t *pamh, struct pam_limit_s *pl, int ctrl)
+ {
+     int i;
+     int retval = PAM_SUCCESS;
++    static int mlock_limit = 0;
+ 
+     D(("called."));
+ 
++    pl->root = 0;
++
++    if (mlock_limit == 0) {
++	mlock_limit = sysconf(_SC_PAGESIZE);
++	if (mlock_limit < MLOCK_LIMIT)
++		mlock_limit = MLOCK_LIMIT;
++    }
++
+     for(i = 0; i < RLIM_NLIMITS; i++) {
+ 	int r = getrlimit(i, &pl->limits[i].limit);
+ 	if (r == -1) {
+@@ -473,18 +492,68 @@ static int init_limits(pam_handle_t *pamh, struct pam_limit_s *pl, int ctrl)
+     }
+ 
+ #ifdef __linux__
+-    if (ctrl & PAM_SET_ALL) {
+-      parse_kernel_limits(pamh, pl, ctrl);
++    parse_kernel_limits(pamh, pl, ctrl);
++#endif
+ 
+-      for(i = 0; i < RLIM_NLIMITS; i++) {
++    for(i = 0; i < RLIM_NLIMITS; i++) {
+ 	if (pl->limits[i].supported &&
+ 	    (pl->limits[i].src_soft == LIMITS_DEF_NONE ||
+ 	     pl->limits[i].src_hard == LIMITS_DEF_NONE)) {
+-	  pam_syslog(pamh, LOG_WARNING, "Did not find kernel RLIMIT for %s, using PAM default", rlimit2str(i));
++#ifdef __linux__
++	    pam_syslog(pamh, LOG_WARNING, "Did not find kernel RLIMIT for %s, using PAM default", rlimit2str(i));
++#endif
++	    pl->limits[i].src_soft = LIMITS_DEF_DEFAULT;
++	    pl->limits[i].src_hard = LIMITS_DEF_DEFAULT;
++	    switch(i) {
++		case RLIMIT_CPU:
++		case RLIMIT_FSIZE:
++		case RLIMIT_DATA:
++		case RLIMIT_RSS:
++		case RLIMIT_NPROC:
++#ifdef RLIMIT_AS
++		case RLIMIT_AS:
++#endif
++#ifdef RLIMIT_LOCKS
++		case RLIMIT_LOCKS:
++#endif
++		    pl->limits[i].limit.rlim_cur = RLIM_INFINITY;
++		    pl->limits[i].limit.rlim_max = RLIM_INFINITY;
++		    break;
++		case RLIMIT_MEMLOCK:
++		    pl->limits[i].limit.rlim_cur = mlock_limit;
++		    pl->limits[i].limit.rlim_max = mlock_limit;
++		    break;
++#ifdef RLIMIT_SIGPENDING
++		case RLIMIT_SIGPENDING:
++		    pl->limits[i].limit.rlim_cur = 16382;
++		    pl->limits[i].limit.rlim_max = 16382;
++		    break;
++#endif
++#ifdef RLIMIT_MSGQUEUE
++		case RLIMIT_MSGQUEUE:
++		    pl->limits[i].limit.rlim_cur = 819200;
++		    pl->limits[i].limit.rlim_max = 819200;
++		    break;
++#endif
++		case RLIMIT_CORE:
++		    pl->limits[i].limit.rlim_cur = 0;
++		    pl->limits[i].limit.rlim_max = RLIM_INFINITY;
++		    break;
++		case RLIMIT_STACK:
++		    pl->limits[i].limit.rlim_cur = 8192*1024;
++		    pl->limits[i].limit.rlim_max = RLIM_INFINITY;
++		    break;
++		case RLIMIT_NOFILE:
++		    pl->limits[i].limit.rlim_cur = 1024;
++		    pl->limits[i].limit.rlim_max = 1024;
++		    break;
++		default:
++		    pl->limits[i].src_soft = LIMITS_DEF_NONE;
++		    pl->limits[i].src_hard = LIMITS_DEF_NONE;
++		    break;
++	    }
+ 	}
+-      }
+     }
+-#endif
+ 
+     errno = 0;
+     pl->priority = getpriority (PRIO_PROCESS, 0);
+@@ -885,7 +954,7 @@ parse_config_file(pam_handle_t *pamh, const char *uname, uid_t uid, gid_t gid,
+ 
+             if (strcmp(uname, domain) == 0) /* this user have a limit */
+                 process_limit(pamh, LIMITS_DEF_USER, ltype, item, value, ctrl, pl);
+-            else if (domain[0]=='@') {
++            else if (domain[0]=='@' && !pl->root) {
+ 		if (ctrl & PAM_DEBUG_ARG) {
+ 			pam_syslog(pamh, LOG_DEBUG,
+ 				   "checking if %s is in group %s",
+@@ -911,7 +980,7 @@ parse_config_file(pam_handle_t *pamh, const char *uname, uid_t uid, gid_t gid,
+ 			    process_limit(pamh, LIMITS_DEF_GROUP, ltype, item, value, ctrl,
+ 					  pl);
+ 		}
+-            } else if (domain[0]=='%') {
++            } else if (domain[0]=='%' && !pl->root) {
+ 		if (ctrl & PAM_DEBUG_ARG) {
+ 			pam_syslog(pamh, LOG_DEBUG,
+ 				   "checking if %s is in group %s",
+@@ -945,7 +1014,7 @@ parse_config_file(pam_handle_t *pamh, const char *uname, uid_t uid, gid_t gid,
+             } else {
+ 		switch(rngtype) {
+ 		    case LIMIT_RANGE_NONE:
+-			if (strcmp(domain, "*") == 0)
++			if (strcmp(domain, "*") == 0 && !pl->root)
+ 			    process_limit(pamh, LIMITS_DEF_DEFAULT, ltype, item, value, ctrl,
+ 					  pl);
+ 			break;
+@@ -1228,6 +1297,8 @@ pam_sm_open_session (pam_handle_t *pamh, int flags UNUSED,
+         return PAM_ABORT;
+     }
+ 
++    if (pwd->pw_uid == 0)
++        pl->root = 1;
+     retval = parse_config_file(pamh, pwd->pw_name, pwd->pw_uid, pwd->pw_gid,
+ 			       ctrl, pl, conf_file_set_by_user);
+     if (retval == PAM_IGNORE) {

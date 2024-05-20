@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_filter
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_FILTER" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_FILTER" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,12 +48,12 @@ that of the user\&. For this reason it cannot usually be killed by the user with
 .SH "OPTIONS"
 .PP
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBnew_term\fR
+new_term
 .RS 4
 The default action of the filter is to set the
 \fIPAM_TTY\fR
@@ -62,14 +62,14 @@ item to indicate the terminal that the user is using to connect to the applicati
 to the filtered pseudo\-terminal\&.
 .RE
 .PP
-\fBnon_term\fR
+non_term
 .RS 4
 don\*(Aqt try to set the
 \fIPAM_TTY\fR
 item\&.
 .RE
 .PP
-\fBrunX\fR
+runX
 .RS 4
 In order that the module can invoke a filter it should know when to invoke it\&. This argument is required to tell the filter when to do this\&.
 .sp
@@ -122,7 +122,7 @@ is used to indicate that the filter is run on the second occasion (the
 phase)\&.
 .RE
 .PP
-\fBfilter\fR
+filter
 .RS 4
 The full pathname of the filter to be run and any command line arguments that the filter might expect\&.
 .RE

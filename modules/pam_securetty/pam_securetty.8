@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_securetty
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_SECURETTY" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_SECURETTY" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,7 +39,7 @@ securetty
 file\&. pam_securetty checks at first, if
 /etc/securetty
 exists\&. If not and it was built with vendordir support, it will use
-<vendordir>/securetty\&. pam_securetty also checks that the
+/securetty\&. pam_securetty also checks that the
 securetty
 files are plain files and not world writable\&. It will also allow root logins on the tty specified with
 \fBconsole=\fR
@@ -57,12 +57,12 @@ authentication method before any
 authentication methods\&.
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBnoconsole\fR
+noconsole
 .RS 4
 Do not automatically allow root logins on the kernel console device, as specified on the kernel command line or by the sys file, if it is not also specified in the
 securetty

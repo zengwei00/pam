@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: limits.conf
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "LIMITS\&.CONF" "5" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "LIMITS\&.CONF" "5" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,7 +50,7 @@ The syntax of the lines is as follows:
 .PP
 The fields listed above should be filled as follows:
 .PP
-\fB<domain>\fR
+<domain>
 .RS 4
 .sp
 .RS 4
@@ -147,17 +147,17 @@ applicable to maxlogins limit only\&. It limits the total number of logins of al
 .RE
 .RE
 .PP
-\fB<type>\fR
+<type>
 .RS 4
 .PP
-\fBhard\fR
+hard
 .RS 4
 for enforcing
 \fBhard\fR
 resource limits\&. These limits are set by the superuser and enforced by the Kernel\&. The user cannot raise his requirement of system resources above such values\&.
 .RE
 .PP
-\fBsoft\fR
+soft
 .RS 4
 for enforcing
 \fBsoft\fR
@@ -168,7 +168,7 @@ limits\&. The values specified with this token can be thought of as
 values, for normal system usage\&.
 .RE
 .PP
-\fB\-\fR
+\-
 .RS 4
 for enforcing both
 \fBsoft\fR
@@ -180,102 +180,102 @@ Note, if you specify a type of \*(Aq\-\*(Aq but neglect to supply the item and v
 .RE
 .RE
 .PP
-\fB<item>\fR
+<item>
 .RS 4
 .PP
-\fBcore\fR
+core
 .RS 4
 limits the core file size (KB)
 .RE
 .PP
-\fBdata\fR
+data
 .RS 4
 maximum data size (KB)
 .RE
 .PP
-\fBfsize\fR
+fsize
 .RS 4
 maximum filesize (KB)
 .RE
 .PP
-\fBmemlock\fR
+memlock
 .RS 4
 maximum locked\-in\-memory address space (KB)
 .RE
 .PP
-\fBnofile\fR
+nofile
 .RS 4
 maximum number of open file descriptors
 .RE
 .PP
-\fBrss\fR
+rss
 .RS 4
 maximum resident set size (KB) (Ignored in Linux 2\&.4\&.30 and higher)
 .RE
 .PP
-\fBstack\fR
+stack
 .RS 4
 maximum stack size (KB)
 .RE
 .PP
-\fBcpu\fR
+cpu
 .RS 4
 maximum CPU time (minutes)
 .RE
 .PP
-\fBnproc\fR
+nproc
 .RS 4
 maximum number of processes
 .RE
 .PP
-\fBas\fR
+as
 .RS 4
 address space limit (KB)
 .RE
 .PP
-\fBmaxlogins\fR
+maxlogins
 .RS 4
 maximum number of logins for this user (this limit does not apply to user with
 \fIuid=0\fR)
 .RE
 .PP
-\fBmaxsyslogins\fR
+maxsyslogins
 .RS 4
 maximum number of all logins on system; user is not allowed to log\-in if total number of all user logins is greater than specified number (this limit does not apply to user with
 \fIuid=0\fR)
 .RE
 .PP
-\fBnonewprivs\fR
+nonewprivs
 .RS 4
 value of 0 or 1; if set to 1 disables acquiring new privileges by invoking prctl(PR_SET_NO_NEW_PRIVS)
 .RE
 .PP
-\fBpriority\fR
+priority
 .RS 4
 the priority to run user process with (negative values boost process priority)
 .RE
 .PP
-\fBlocks\fR
+locks
 .RS 4
 maximum locked files (Linux 2\&.4 and higher)
 .RE
 .PP
-\fBsigpending\fR
+sigpending
 .RS 4
 maximum number of pending signals (Linux 2\&.6 and higher)
 .RE
 .PP
-\fBmsgqueue\fR
+msgqueue
 .RS 4
 maximum memory used by POSIX message queues (bytes) (Linux 2\&.6 and higher)
 .RE
 .PP
-\fBnice\fR
+nice
 .RS 4
 maximum nice priority allowed to raise to (Linux 2\&.6\&.12 and higher) values: [\-20,19]
 .RE
 .PP
-\fBrtprio\fR
+rtprio
 .RS 4
 maximum realtime priority allowed for non\-privileged processes (Linux 2\&.6\&.12 and higher)
 .RE

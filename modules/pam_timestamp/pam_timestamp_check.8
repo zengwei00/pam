@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_timestamp_check
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_TIMESTAMP_CHECK" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_TIMESTAMP_CHECK" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,19 +39,19 @@ With no arguments
 will check to see if the default timestamp is valid, or optionally remove it\&.
 .SH "OPTIONS"
 .PP
-\fB\-k\fR
+\-k
 .RS 4
 Instead of checking the validity of a timestamp, remove it\&. This is analogous to sudo\*(Aqs
 \fI\-k\fR
 option\&.
 .RE
 .PP
-\fB\-d\fR
+\-d
 .RS 4
 Instead of returning validity using an exit status, loop indefinitely, polling regularly and printing the status on standard output\&.
 .RE
 .PP
-\fB\fItarget_user\fR\fR
+target_user
 .RS 4
 By default
 \fBpam_timestamp_check\fR

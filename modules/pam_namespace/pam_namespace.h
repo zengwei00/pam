@@ -30,7 +30,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#if !(defined(linux))
+#ifndef __linux__
 #error THIS CODE IS KNOWN TO WORK ONLY ON LINUX !!!
 #endif
 
@@ -90,14 +90,16 @@
 /*
  * Module defines
  */
-#ifndef SECURECONF_DIR
-#define SECURECONF_DIR "/etc/security/"
+#define PAM_NAMESPACE_CONFIG (SCONFIGDIR "/namespace.conf")
+#define NAMESPACE_INIT_SCRIPT (SCONFIGDIR "/namespace.init")
+#define NAMESPACE_D_DIR (SCONFIGDIR "/namespace.d/")
+#define NAMESPACE_D_GLOB (SCONFIGDIR "/namespace.d/*.conf")
+#ifdef VENDOR_SCONFIGDIR
+#define VENDOR_NAMESPACE_INIT_SCRIPT (VENDOR_SCONFIGDIR "/namespace.init")
+#define VENDOR_PAM_NAMESPACE_CONFIG (VENDOR_SCONFIGDIR "/namespace.conf")
+#define VENDOR_NAMESPACE_D_DIR (VENDOR_SCONFIGDIR "/namespace.d/")
+#define VENDOR_NAMESPACE_D_GLOB (VENDOR_SCONFIGDIR "/namespace.d/*.conf")
 #endif
-
-#define PAM_NAMESPACE_CONFIG (SECURECONF_DIR "namespace.conf")
-#define NAMESPACE_INIT_SCRIPT (SECURECONF_DIR "namespace.init")
-#define NAMESPACE_D_DIR (SECURECONF_DIR "namespace.d/")
-#define NAMESPACE_D_GLOB (SECURECONF_DIR "namespace.d/*.conf")
 
 /* module flags */
 #define PAMNS_DEBUG           0x00000100 /* Running in debug mode */

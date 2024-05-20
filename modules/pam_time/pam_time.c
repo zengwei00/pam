@@ -33,6 +33,11 @@
 #include <libaudit.h>
 #endif
 
+#define PAM_TIME_CONF	(SCONFIGDIR "/time.conf")
+#ifdef VENDOR_SCONFIGDIR
+#define VENDOR_PAM_TIME_CONF (VENDOR_SCONFIGDIR "/time.conf")
+#endif
+
 #define PAM_TIME_BUFLEN        1000
 #define FIELD_SEPARATOR        ';'   /* this is new as of .02 */
 
@@ -53,7 +58,7 @@ _pam_parse (const pam_handle_t *pamh, int argc, const char **argv, const char **
 {
     int ctrl = 0;
 
-    *conffile = PAM_TIME_CONF;
+    *conffile = NULL;
     /* step through arguments */
     for (; argc-- > 0; ++argv) {
 	const char *str;
@@ -77,6 +82,20 @@ _pam_parse (const pam_handle_t *pamh, int argc, const char **argv, const char **
 	}
     }
 
+    if (*conffile == NULL) {
+	*conffile = PAM_TIME_CONF;
+#ifdef VENDOR_PAM_TIME_CONF
+	/*
+	 * Check whether PAM_TIME_CONF file is available.
+	 * If it does not exist, fall back to VENDOR_PAM_TIME_CONF file.
+	 */
+	struct stat buffer;
+	if (stat(*conffile, &buffer) != 0 && errno == ENOENT) {
+	    *conffile = VENDOR_PAM_TIME_CONF;
+	}
+#endif
+    }
+
     return ctrl;
 }
 
@@ -88,7 +107,7 @@ shift_buf(char *mem, int from)
     char *start = mem;
     while ((*mem = mem[from]) != '\0')
 	++mem;
-    memset(mem, '\0', PAM_TIME_BUFLEN - (mem - start));
+    pam_overwrite_n(mem, PAM_TIME_BUFLEN - (mem - start));
     return mem;
 }
 
@@ -149,7 +168,7 @@ read_field(const pam_handle_t *pamh, int fd, char **buf, int *from, int *state, 
 	if (i < 0) {
 	    pam_syslog(pamh, LOG_ERR, "error reading %s: %m", file);
 	    close(fd);
-	    memset(*buf, 0, PAM_TIME_BUFLEN);
+	    pam_overwrite_n(*buf, PAM_TIME_BUFLEN);
 	    _pam_drop(*buf);
 	    *state = STATE_EOF;
 	    return -1;
@@ -168,7 +187,7 @@ read_field(const pam_handle_t *pamh, int fd, char **buf, int *from, int *state, 
 	return -1;
     }
 
-    memset(to, '\0', PAM_TIME_BUFLEN - (to - *buf));
+    pam_overwrite_n(to, PAM_TIME_BUFLEN - (to - *buf));
 
     to = *buf;
     onspace = 1; /* delete any leading spaces */

@@ -8,9 +8,37 @@ The pam_env PAM module allows the (un)setting of environment variables.
 Supported is the use of previously set environment variables as well as 
 PAM_ITEMs such as PAM_RHOST.
 
+Rules for (un)setting of variables can be defined in an own config file. The
+path to this file can be specified with the conffile option. If this file does
+not exist, the default rules are taken from the config files /etc/security/
+pam_env.conf and /etc/security/pam_env.conf.d/*.conf. If the file /etc/security
+/pam_env.conf does not exist, the rules are taken from the files %vendordir%/
+security/pam_env.conf, %vendordir%/security/pam_env.conf.d/*.conf and /etc/
+security/pam_env.conf.d/*.conf in that order.
+
+By default rules for (un)setting of variables are taken from the config file /
+etc/security/pam_env.conf. If this file does not exist %vendordir%/security/
+pam_env.conf is used. An alternate file can be specified with the conffile
+option, which overrules all other files.
+
 By default rules for (un)setting of variables are taken from the config file /
 etc/security/pam_env.conf. An alternate file can be specified with the conffile
 option.
+
+Environment variables can be defined in a file with simple KEY=VAL pairs on
+separate lines. The path to this file can be specified with the envfile option.
+If this file has not been defined, the settings are read from the files /etc/
+security/environment and /etc/security/environment.d/*. If the file /etc/
+environment does not exist, the settings are read from the files %vendordir%/
+environment, %vendordir%/environment.d/* and /etc/environment.d/* in that
+order. And last but not least, with the readenv option this mechanism can be
+completely disabled.
+
+Second a file (/etc/environment by default) with simple KEY=VAL pairs on
+separate lines will be read. If this file does not exist, %vendordir%/etc/
+environment is used. With the envfile option an alternate file can be
+specified, which overrules all other files. And with the readenv option this
+can be completely disabled.
 
 Second a file (/etc/environment by default) with simple KEY=VAL pairs on
 separate lines will be read. With the envfile option an alternate file can be

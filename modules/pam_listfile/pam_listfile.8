@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_listfile
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_LISTFILE" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_LISTFILE" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -82,27 +82,27 @@ No credentials are awarded by this module\&.
 .SH "OPTIONS"
 .PP
 .PP
-\fBitem=[tty|user|rhost|ruser|group|shell]\fR
+item=[tty|user|rhost|ruser|group|shell]
 .RS 4
 What is listed in the file and should be checked for\&.
 .RE
 .PP
-\fBsense=[allow|deny]\fR
+sense=[allow|deny]
 .RS 4
 Action to take if found in file, if the item is NOT found in the file, then the opposite action is requested\&.
 .RE
 .PP
-\fBfile=\fR\fB\fI/path/filename\fR\fR
+file=/path/filename
 .RS 4
 File containing one item per line\&. The file needs to be a plain file and not world writable\&.
 .RE
 .PP
-\fBonerr=[succeed|fail]\fR
+onerr=[succeed|fail]
 .RS 4
 What to do if something weird happens like being unable to open the file\&.
 .RE
 .PP
-\fBapply=[\fR\fB\fIuser\fR\fR\fB|\fR\fB\fI@group\fR\fR\fB]\fR
+apply=[user|@group]
 .RS 4
 Restrict the user class for which the restriction apply\&. Note that with
 \fBitem=[user|ruser|group]\fR
@@ -111,7 +111,7 @@ this does not make sense, but for
 it have a meaning\&.
 .RE
 .PP
-\fBquiet\fR
+quiet
 .RS 4
 Do not treat service refusals or missing list files as errors that need to be logged\&.
 .RE

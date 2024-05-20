@@ -15,12 +15,16 @@ endif
 XMLS = README.xml pam_faillock.8.xml faillock.8.xml faillock.conf.5.xml
 
 dist_check_SCRIPTS = tst-pam_faillock
-TESTS = $(dist_check_SCRIPTS)
+TESTS = $(dist_check_SCRIPTS) $(check_PROGRAMS)
 
 securelibdir = $(SECUREDIR)
+if HAVE_VENDORDIR
+secureconfdir = $(VENDOR_SCONFIGDIR)
+else
 secureconfdir = $(SCONFIGDIR)
+endif
 
-noinst_HEADERS = faillock.h
+noinst_HEADERS = faillock.h faillock_config.h
 
 AM_CFLAGS = -I$(top_srcdir)/libpam/include -I$(top_srcdir)/libpamc/include \
 	$(WARN_CFLAGS)
@@ -33,6 +37,9 @@ if HAVE_VERSIONING
   pam_faillock_la_LDFLAGS += -Wl,--version-script=$(srcdir)/../modules.map
 endif
 
+check_PROGRAMS = tst-pam_faillock-retval
+tst_pam_faillock_retval_LDADD = $(top_builddir)/libpam/libpam.la
+
 faillock_LDFLAGS = @EXE_LDFLAGS@
 faillock_LDADD = $(top_builddir)/libpam/libpam.la $(LIBAUDIT)
 
@@ -41,8 +48,8 @@ dist_secureconf_DATA = faillock.conf
 securelib_LTLIBRARIES = pam_faillock.la
 sbin_PROGRAMS = faillock
 
-pam_faillock_la_SOURCES = pam_faillock.c faillock.c
-faillock_SOURCES = main.c faillock.c
+pam_faillock_la_SOURCES = pam_faillock.c faillock.c faillock_config.c
+faillock_SOURCES = main.c faillock.c faillock_config.c
 
 if ENABLE_REGENERATE_MAN
 dist_noinst_DATA = README

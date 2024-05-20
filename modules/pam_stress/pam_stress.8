@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_stress
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_STRESS" "8" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM_STRESS" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,52 +37,52 @@ pam_stress \- The stress\-testing PAM module
 The pam_stress PAM module is mainly intended to give the impression of failing as a fully functioning module might\&.
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Put lots of information in syslog\&. *NOTE* this option writes passwords to syslog, so don\*(Aqt use anything sensitive when testing\&.
 .RE
 .PP
-\fBno_warn\fR
+no_warn
 .RS 4
 Do not give warnings about things (otherwise warnings are issued via the conversation function)
 .RE
 .PP
-\fBuse_first_pass\fR
+use_first_pass
 .RS 4
 Do not prompt for a password, for pam_sm_authentication function just use item PAM_AUTHTOK\&.
 .RE
 .PP
-\fBtry_first_pass\fR
+try_first_pass
 .RS 4
 Do not prompt for a password unless there has been no previous authentication token (item PAM_AUTHTOK is NULL)
 .RE
 .PP
-\fBrootok\fR
+rootok
 .RS 4
 This is intended for the pam_sm_chauthtok function and it instructs this function to permit root to change the user\*(Aqs password without entering the old password\&.
 .RE
 .PP
-\fBexpired\fR
+expired
 .RS 4
 An argument intended for the account and chauthtok module parts\&. It instructs the module to act as if the user\*(Aqs password has expired
 .RE
 .PP
-\fBfail_1\fR
+fail_1
 .RS 4
 This instructs the module to make its first function fail\&.
 .RE
 .PP
-\fBfail_2\fR
+fail_2
 .RS 4
 This instructs the module to make its second function (if there is one) fail\&.
 .RE
 .PP
-\fBprelim\fR
+prelim
 .RS 4
 For pam_sm_chauthtok, means fail on PAM_PRELIM_CHECK\&.
 .RE
 .PP
-\fBrequired\fR
+required
 .RS 4
 For pam_sm_chauthtok, means fail if the user hasn\*(Aqt already been authenticated by this module\&. (See stress_new_pwd data string in the NOTES\&.)
 .RE

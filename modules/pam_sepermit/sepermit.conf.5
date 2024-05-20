@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: sepermit.conf
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "SEPERMIT\&.CONF" "5" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "SEPERMIT\&.CONF" "5" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -78,12 +78,12 @@ syntax\&.
 .PP
 The recognized options are:
 .PP
-\fBexclusive\fR
+exclusive
 .RS 4
 Only single login session will be allowed for the user and the user\*(Aqs processes will be killed on logout\&.
 .RE
 .PP
-\fBignore\fR
+ignore
 .RS 4
 The module will never return PAM_SUCCESS status for the user\&. It will return PAM_IGNORE if SELinux is in the enforcing mode, and PAM_AUTH_ERR otherwise\&. It is useful if you want to support passwordless guest users and other confined users with passwords simultaneously\&.
 .RE

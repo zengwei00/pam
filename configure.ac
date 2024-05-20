@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([Linux-PAM], [1.5.2], , [Linux-PAM])
+AC_INIT([Linux-PAM], [1.5.3], , [Linux-PAM])
 AC_CONFIG_SRCDIR([conf/pam_conv1/pam_conv_y.y])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Wno-portability])
@@ -243,6 +243,38 @@ if test x"$enable_debug" = x"yes" ; then
 		[lots of stuff gets written to /var/run/pam-debug.log])
 fi
 
+AC_ARG_ENABLE(docbook_rng,
+	AS_HELP_STRING([--enable-docbook-rng=FILE],[RNG file for checking XML files @<:@default=http://docbook.org/xml/5.0/rng/docbookxi.rng@:>@]),
+	DOCBOOK_RNG=$enableval, DOCBOOK_RNG=http://docbook.org/xml/5.0/rng/docbookxi.rng)
+AC_SUBST(DOCBOOK_RNG)
+
+AC_ARG_ENABLE(html_stylesheet,
+	AS_HELP_STRING([--enable-html-stylesheet=FILE],[html stylesheet path @<:@default=http://docbook.sourceforge.net/release/xsl-ns/current/html/chunk.xsl@:>@]),
+	HTML_STYLESHEET=$enableval, HTML_STYLESHEET=http://docbook.sourceforge.net/release/xsl-ns/current/html/chunk.xsl)
+AC_SUBST(HTML_STYLESHEET)
+
+AC_ARG_ENABLE(txt_stylesheet,
+	AS_HELP_STRING([--enable-txt-stylesheet=FILE],[text stylesheet path @<:@default=http://docbook.sourceforge.net/release/xsl-ns/current/html/docbook.xsl@:>@]),
+	TXT_STYLESHEET=$enableval, TXT_STYLESHEET=http://docbook.sourceforge.net/release/xsl-ns/current/html/docbook.xsl)
+
+
+AC_SUBST(TXT_STYLESHEET)
+# It has to be TXT_STYLESHEET otherwise a html tree will be generated while generating all README files.
+sed "s+HTML_STYLESHEET+$TXT_STYLESHEET+g" <doc/custom-html.xsl.in >doc/custom-html.xsl
+
+AC_ARG_ENABLE(pdf_stylesheet,
+	AS_HELP_STRING([--enable-pdf-stylesheet=FILE],[pdf stylesheet path @<:@default=http://docbook.sourceforge.net/release/xsl-ns/current/fo/docbook.xsl@:>@]),
+	PDF_STYLESHEET=$enableval, PDF_STYLESHEET=http://docbook.sourceforge.net/release/xsl-ns/current/fo/docbook.xsl)
+AC_SUBST(PDF_STYLESHEET)
+
+AC_ARG_ENABLE(man_stylesheet,
+	AS_HELP_STRING([--enable-man-stylesheet=FILE],[man stylesheet path @<:@default=http://docbook.sourceforge.net/release/xsl-ns/current/manpages/profile-docbook.xsl@:>@]),
+	MAN_STYLESHEET=$enableval, MAN_STYLESHEET=http://docbook.sourceforge.net/release/xsl-ns/current/manpages/profile-docbook.xsl)
+
+
+AC_SUBST(MAN_STYLESHEET)
+sed "s+MAN_STYLESHEET+$MAN_STYLESHEET+g" <doc/custom-man.xsl.in >doc/custom-man.xsl
+
 AC_ARG_ENABLE(securedir,
 	AS_HELP_STRING([--enable-securedir=DIR],[path to location of PAMs @<:@default=$libdir/security@:>@]),
 	SECUREDIR=$enableval, SECUREDIR=$libdir/security)
@@ -259,6 +291,8 @@ AC_MSG_RESULT([Defining \$ISA to "$ISA"])
 AC_ARG_ENABLE(sconfigdir,
 	AS_HELP_STRING([--enable-sconfigdir=DIR],[path to module conf files @<:@default=$sysconfdir/security@:>@]),
 	SCONFIGDIR=$enableval, SCONFIGDIR=$sysconfdir/security)
+AC_DEFINE_UNQUOTED([SCONFIGDIR], ["$SCONFIGDIR"],
+		   [Directory for PAM modules system configuration files])
 AC_SUBST(SCONFIGDIR)
 
 AC_ARG_ENABLE(pamlocking,
@@ -295,6 +329,7 @@ if test x$with_mailspool != x ; then
 else
 	AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <paths.h>
+#include <stdlib.h>
 int main() {
 #ifdef _PATH_MAILDIR
 exit(0);
@@ -446,7 +481,9 @@ AS_IF([test "x$enable_nis" != "xno"], [
 
   AC_CHECK_FUNCS([yp_get_default_domain yperr_string yp_master yp_bind yp_match yp_unbind])
   AC_CHECK_FUNCS([getrpcport rpcb_getaddr])
-  AC_CHECK_HEADERS([rpc/rpc.h rpcsvc/ypclnt.h rpcsvc/yp_prot.h])
+  AC_CHECK_HEADER([rpc/rpc.h], , [enable_nis=no])
+  AC_CHECK_HEADER([rpcsvc/ypclnt.h], , [enable_nis=no])
+  AC_CHECK_HEADER([rpcsvc/yp_prot.h], , [enable_nis=no])
   AC_CHECK_DECLS([getrpcport], , , [
     #if HAVE_RPC_RPC_H
     # include <rpc/rpc.h>
@@ -460,6 +497,11 @@ AS_IF([test "x$enable_nis" != "xno"], [
 
 AC_SUBST([NIS_CFLAGS])
 AC_SUBST([NIS_LIBS])
+AM_CONDITIONAL([HAVE_NIS], [test "x$enable_nis" != "xno"])
+if test "x$enable_nis" != "xno" ; then
+   AC_DEFINE([HAVE_NIS], 1,
+	     [Defines that NIS should be used])
+fi
 
 AC_ARG_ENABLE([usergroups],
   AS_HELP_STRING([--enable-usergroups], [sets the usergroups option default to enabled]),
@@ -490,28 +532,49 @@ if test -n "$LIBSELINUX" ; then
     LIBS=$BACKUP_LIBS
 fi
 
+LOGIND_CFLAGS=
+SYSTEMD_LIBS=
+AC_ARG_ENABLE([logind],
+  AS_HELP_STRING([--disable-logind], [Disable logind support]),
+  [WITH_LOGIND=$enableval], [WITH_LOGIND=yes])
+if test "$WITH_LOGIND" = "yes"; then
+  PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 254], [LOGIND_CFLAGS="-DUSE_LOGIND=1 $SYSTEMD_CFLAGS"], [:])
+fi
+AC_SUBST([LOGIND_CFLAGS])
+AC_SUBST([SYSTEMD_LIBS])
+
+ECONF_CFLAGS=
+ECONF_LIBS=
 AC_ARG_ENABLE([econf],
   AS_HELP_STRING([--disable-econf], [do not use libeconf]),
-  [WITH_ECONF=$enableval], WITH_ECONF=yes)
-if test "$WITH_ECONF" = "yes" ; then
-  PKG_CHECK_MODULES([ECONF], [libeconf], [],
-  [AC_CHECK_LIB([econf],[econf_readDirs],[ECONF_LIBS="-leconf"],[ECONF_LIBS=""])])
-  if test -n "$ECONF_LIBS" ; then
-    ECONF_CFLAGS="-DUSE_ECONF=1 $ECONF_CFLAGS"
-  fi
+  [WITH_ECONF=$enableval], [WITH_ECONF=yes])
+if test "$WITH_ECONF" = "yes"; then
+  PKG_CHECK_MODULES([ECONF], [libeconf >= 0.5.0], [ECONF_CFLAGS="-DUSE_ECONF=1 $ECONF_CFLAGS"], [:])
 fi
 AC_SUBST([ECONF_CFLAGS])
 AC_SUBST([ECONF_LIBS])
+
 AC_ARG_ENABLE([vendordir],
   AS_HELP_STRING([--enable-vendordir=DIR], [Directory for distribution provided configuration files]),,[])
 if test -n "$enable_vendordir"; then
   AC_DEFINE_UNQUOTED([VENDORDIR], ["$enable_vendordir"],
 		     [Directory for distribution provided configuration files])
-  STRINGPARAM_VENDORDIR="--stringparam vendordir '$enable_vendordir'"
+  AC_DEFINE_UNQUOTED([VENDOR_SCONFIGDIR], ["$enable_vendordir/security"],
+		     [Directory for PAM modules distribution provided configuration files])
+  if test "$WITH_ECONF" = "yes" ; then
+    STRINGPARAM_VENDORDIR="--stringparam vendordir '$enable_vendordir'"
+    profileconditions="with_vendordir;with_vendordir_and_with_econf"
+  else
+    STRINGPARAM_VENDORDIR="--stringparam vendordir '$enable_vendordir'"
+    profileconditions="with_vendordir;with_vendordir_and_without_econf"
+  fi
+  VENDOR_SCONFIGDIR="$enable_vendordir/security"
 else
-  STRINGPARAM_VENDORDIR="--stringparam vendordir '<vendordir>'"
+  profileconditions="without_vendordir"
 fi
 AC_SUBST([STRINGPARAM_VENDORDIR])
+AC_SUBST(VENDOR_SCONFIGDIR)
+AM_CONDITIONAL([HAVE_VENDORDIR], [test -n "$enable_vendordir"])
 
 AC_ARG_ENABLE([openssl],
   AS_HELP_STRING([--enable-openssl],[use OpenSSL crypto libraries]),
@@ -521,13 +584,15 @@ if test "$OPENSSL_ENABLED" = "yes" ; then
   [CRYPTO_LIBS="-lcrypto"
    use_openssl=yes
    AC_DEFINE([WITH_OPENSSL], 1, [OpenSSL provides crypto algorithm for hmac])
-   STRINGPARAM_HMAC="--stringparam profile.condition 'openssl_hmac'"],
+   profileconditions+=";openssl_hmac"],
   [CRYPTO_LIBS=""
-   STRINGPARAM_HMAC="--stringparam profile.condition 'no_openssl_hmac'"])
+   profileconditions+=";no_openssl_hmac"])
 fi
 AC_SUBST([CRYPTO_LIBS])
-AC_SUBST([STRINGPARAM_HMAC])
 AM_CONDITIONAL([COND_USE_OPENSSL], [test "x$use_openssl" = "xyes"])
+
+STRINGPARAM_PROFILECONDITIONS="--stringparam profile.condition '$profileconditions'"
+AC_SUBST([STRINGPARAM_PROFILECONDITIONS])
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
@@ -560,11 +625,8 @@ AC_CHECK_FUNCS(getgrouplist getline getdelim)
 AC_CHECK_FUNCS(inet_ntop inet_pton innetgr)
 AC_CHECK_FUNCS(quotactl)
 AC_CHECK_FUNCS(unshare)
+AC_CHECK_FUNCS(explicit_bzero memset_explicit)
 AC_CHECK_FUNCS([ruserok_af ruserok], [break])
-BACKUP_LIBS=$LIBS
-LIBS="$LIBS -lutil"
-AC_CHECK_FUNCS([logwtmp])
-LIBS=$BACKUP_LIBS
 
 AC_ARG_ENABLE([regenerate-docu],
   AS_HELP_STRING([--disable-regenerate-docu],[Don't re-build documentation from XML sources]),
@@ -577,10 +639,10 @@ if test -z "$XSLTPROC"; then
      enable_docu=no
 fi
 AC_PATH_PROG([XMLLINT], [xmllint],[/bin/true])
-dnl check for DocBook DTD and stylesheets in the local catalog.
-JH_CHECK_XML_CATALOG([-//OASIS//DTD DocBook XML V4.4//EN],
-                [DocBook XML DTD V4.4], [], enable_docu=no)
-JH_CHECK_XML_CATALOG([http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl],
+dnl check for DocBook RNG and stylesheets in the local catalog.
+JH_CHECK_XML_CATALOG([http://docbook.org/xml/5.0/rng/docbookxi.rng],
+                [DocBook XML RNG V5.0], [], enable_docu=no)
+JH_CHECK_XML_CATALOG([http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl],
                 [DocBook XSL Stylesheets], [], enable_docu=no)
 
 AC_PATH_PROG([BROWSER], [w3m])
@@ -628,11 +690,6 @@ test -n "$opt_uidmin" ||
           opt_uidmin=1000
 AC_DEFINE_UNQUOTED(PAM_USERTYPE_UIDMIN, $opt_uidmin, [Minimum regular user uid.])
 
-AC_ARG_WITH([sysuidmin], AS_HELP_STRING([--with-sysuidmin=<number>],[default value for system user min uid (101)]), opt_sysuidmin=$withval)
-test -n "$opt_sysuidmin" ||
-          opt_sysuidmin=101
-AC_DEFINE_UNQUOTED(PAM_USERTYPE_SYSUIDMIN, $opt_sysuidmin, [Minimum system user uid.])
-
 AC_ARG_WITH([kernel-overflow-uid], AS_HELP_STRING([--with-kernel-overflow-uid=<number>],[kernel overflow uid, default (uint16_t)-2=65534]), opt_kerneloverflowuid=$withval)
 test -n "$opt_kerneloverflowuid" ||
           opt_kerneloverflowuid=65534
@@ -655,6 +712,21 @@ AC_ARG_ENABLE([unix],
 case "$enable_unix" in
   yes|no) ;;
   *) AC_MSG_ERROR([bad value $enable_unix for --enable-unix option]) ;;
+esac
+
+AC_ARG_ENABLE([lastlog],
+              [AS_HELP_STRING([--enable-lastlog],
+                              [do build pam_lastlog module])],
+              [], [enable_lastlog=no])
+case "$enable_lastlog" in
+  yes|check)
+    BACKUP_LIBS=$LIBS
+    LIBS="$LIBS -lutil"
+    AC_CHECK_FUNCS([logwtmp])
+    LIBS=$BACKUP_LIBS
+    ;;
+  no) ;;
+  *) AC_MSG_ERROR([bad value $enable_lastlog for --enable-lastlog option]) ;;
 esac
 
 AC_ARG_WITH([misc-conv-bufsize],

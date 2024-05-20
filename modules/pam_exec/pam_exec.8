@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_exec
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_EXEC" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_EXEC" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,12 +57,12 @@ Commands called by pam_exec need to be aware of that the user can have control o
 .SH "OPTIONS"
 .PP
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBexpose_authtok\fR
+expose_authtok
 .RS 4
 During authentication the calling command can read the password from
 \fBstdin\fR(3)\&. Only first
@@ -70,18 +70,18 @@ During authentication the calling command can read the password from
 bytes of a password are provided to the command\&.
 .RE
 .PP
-\fBlog=\fR\fB\fIfile\fR\fR
+log=file
 .RS 4
 The output of the command is appended to
 file
 .RE
 .PP
-\fBtype=\fR\fB\fItype\fR\fR
+type=type
 .RS 4
 Only run the command if the module type matches the given type\&.
 .RE
 .PP
-\fBstdout\fR
+stdout
 .RS 4
 Per default the output of the executed command is written to
 /dev/null\&. With this option, the stdout output of the executed command is redirected to the calling application\&. It\*(Aqs in the responsibility of this application what happens with the output\&. The
@@ -89,17 +89,17 @@ Per default the output of the executed command is written to
 option is ignored\&.
 .RE
 .PP
-\fBquiet\fR
+quiet
 .RS 4
 Per default pam_exec\&.so will echo the exit status of the external command if it fails\&. Specifying this option will suppress the message\&.
 .RE
 .PP
-\fBquiet_log\fR
+quiet_log
 .RS 4
 Per default pam_exec\&.so will log the exit status of the external command if it fails\&. Specifying this option will suppress the log message\&.
 .RE
 .PP
-\fBseteuid\fR
+seteuid
 .RS 4
 Per default pam_exec\&.so will execute the external command with the real user ID of the calling process\&. Specifying this option means the command is run with the effective user ID\&.
 .RE

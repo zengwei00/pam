@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_set_data
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_SET_DATA" "3" "09/03/2021" "Linux-PAM Manual" "Linux-PAM Manual"
+.TH "PAM_SET_DATA" "3" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -94,7 +94,8 @@ PAM_DATA_SILENT
 .RS 4
 Which indicates that the process would prefer to perform the
 \fBcleanup()\fR
-quietly\&. That is, discourages logging/messages to the user\&.
+quietly\&. That is, discourages logging/messages to the user\&. It is generally used to indicate that the current closing of the library is in a
+\fBfork\fR(2)ed process, and that the parent will take care of cleaning up things that exist outside of the current process space (files etc\&.)\&.
 .RE
 .SH "RETURN VALUES"
 .PP

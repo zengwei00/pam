@@ -19,7 +19,7 @@
 #include <ctype.h>
 #include <syslog.h>
 #include <sys/resource.h>
-#ifdef HAVE_RPCSVC_YPCLNT_H
+#ifdef HAVE_NIS
 #include <rpcsvc/ypclnt.h>
 #endif
 
@@ -805,7 +805,7 @@ int _unix_verify_password(pam_handle_t * pamh, const char *name
 	}
 
 cleanup:
-	memset(pw, 0, sizeof(pw)); /* clear memory of the password */
+	pam_overwrite_array(pw); /* clear memory of the password */
 	if (data_name)
 		_pam_delete(data_name);
 	if (salt)

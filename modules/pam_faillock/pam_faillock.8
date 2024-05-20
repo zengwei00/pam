@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_faillock
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "PAM_FAILLOCK" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_FAILLOCK" "8" "05/07/2023" "[FIXME: source]" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,7 +49,7 @@ cause the root account to become blocked, to prevent denial\-of\-service: if you
 or at the machine console (not telnet/rsh, etc), this is safe\&.
 .SH "OPTIONS"
 .PP
-\fB{preauth|authfail|authsucc}\fR
+{preauth|authfail|authsucc}
 .RS 4
 This argument must be set accordingly to the position of this module instance in the PAM stack\&.
 .sp
@@ -74,7 +74,7 @@ as an account module\&. In such configuration the module must be also called in 
 stage\&.
 .RE
 .PP
-\fBconf=/path/to/config\-file\fR
+conf=/path/to/config\-file
 .RS 4
 Use another configuration file instead of the default
 /etc/security/faillock\&.conf\&.
@@ -244,6 +244,13 @@ session  required       pam_selinux\&.so open
 /var/run/faillock/*
 .RS 4
 the files logging the authentication failures for users
+.sp
+Note: These files will disappear after reboot on systems configured with directory
+/var/run/faillock
+mounted on virtual memory\&. For persistent storage use the option
+\fIdir=\fR
+in file
+/etc/security/faillock\&.conf\&.
 .RE
 .PP
 /etc/security/faillock\&.conf

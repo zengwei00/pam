@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <signal.h>
 
 #include <security/pam_modules.h>
 #include <security/_pam_macros.h>
@@ -99,6 +100,7 @@ run_coprocess(pam_handle_t *pamh, const char *input, char **output,
 	char *buffer = NULL;
 	size_t buffer_size = 0;
 	va_list ap;
+	struct sigaction newsa, oldsa;
 
 	*output = NULL;
 
@@ -111,6 +113,17 @@ run_coprocess(pam_handle_t *pamh, const char *input, char **output,
 		pam_syslog(pamh, LOG_ERR, "Could not create pipe: %m");
 		close(ipipe[0]);
 		close(ipipe[1]);
+		return -1;
+	}
+
+	memset(&newsa, '\0', sizeof(newsa));
+	newsa.sa_handler = SIG_DFL;
+	if (sigaction(SIGCHLD, &newsa, &oldsa) == -1) {
+		pam_syslog(pamh, LOG_ERR, "failed to reset SIGCHLD handler: %m");
+		close(ipipe[0]);
+		close(ipipe[1]);
+		close(opipe[0]);
+		close(opipe[1]);
 		return -1;
 	}
 
@@ -128,7 +141,7 @@ run_coprocess(pam_handle_t *pamh, const char *input, char **output,
 	if (child == 0) {
 		/* We're the child. */
 		size_t j;
-		const char *args[10];
+		const char *args[10] = {};
 		/* Drop privileges. */
 		if (setgid(gid) == -1)
 		  {
@@ -168,8 +181,6 @@ run_coprocess(pam_handle_t *pamh, const char *input, char **output,
 						    PAM_MODUTIL_NULL_FD) < 0) {
 		    _exit(1);
 		}
-		/* Initialize the argument list. */
-		memset(args, 0, sizeof(args));
 		/* Convert the varargs list into a regular array of strings. */
 		va_start(ap, command);
 		args[0] = command;
@@ -209,6 +220,7 @@ run_coprocess(pam_handle_t *pamh, const char *input, char **output,
 			}
 			close(opipe[0]);
 			waitpid(child, NULL, 0);
+			sigaction(SIGCHLD, &oldsa, NULL);   /* restore old signal handler */
 			return -1;
 		}
 		/* Save the new buffer location, copy the newly-read data into
@@ -225,6 +237,7 @@ run_coprocess(pam_handle_t *pamh, const char *input, char **output,
 	close(opipe[0]);
 	*output = buffer;
 	waitpid(child, NULL, 0);
+	sigaction(SIGCHLD, &oldsa, NULL);   /* restore old signal handler */
 	return 0;
 }
 
@@ -549,9 +562,8 @@ pam_sm_open_session (pam_handle_t *pamh, int flags UNUSED,
 			}
 			/* Allocate enough space to hold an adjusted name. */
 			tlen = strlen(display) + LINE_MAX + 1;
-			t = malloc(tlen);
+			t = calloc(1, tlen);
 			if (t != NULL) {
-				memset(t, 0, tlen);
 				if (gethostname(t, tlen - 1) != -1) {
 					/* Append the protocol and then the
 					 * screen number. */

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: faillock
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "FAILLOCK" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "FAILLOCK" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,18 +48,27 @@ or clear the tally files of all or individual
 \fIusernames\fR\&.
 .SH "OPTIONS"
 .PP
-\fB\-\-dir \fR\fB\fI/path/to/tally\-directory\fR\fR
+\-\-conf /path/to/config\-file
 .RS 4
-The directory where the user files with the failure records are kept\&. The default is
-/var/run/faillock\&.
+The file where the configuration is located\&. The default is
+/etc/security/faillock\&.conf\&.
 .RE
 .PP
-\fB\-\-user \fR\fB\fIusername\fR\fR
+\-\-dir /path/to/tally\-directory
+.RS 4
+The directory where the user files with the failure records are kept\&.
+.sp
+The priority to set this option is to use the value provided from the command line\&. If this isn\*(Aqt provided, then the value from the configuration file is used\&. Finally, if neither of them has been provided, then
+/var/run/faillock
+is used\&.
+.RE
+.PP
+\-\-user username
 .RS 4
 The user whose failure records should be displayed or cleared\&.
 .RE
 .PP
-\fB\-\-reset\fR
+\-\-reset
 .RS 4
 Instead of displaying the user\*(Aqs failure records, clear them\&.
 .RE

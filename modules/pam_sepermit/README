@@ -23,6 +23,9 @@ disabled and pam_sepermit will return PAM_IGNORE.
 
 See sepermit.conf(5) for details.
 
+If there is no explicitly specified configuration file and /etc/security/
+sepermit.conf does not exist, %vendordir%/security/sepermit.conf is used.
+
 OPTIONS
 
 debug

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_wheel
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_WHEEL" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_WHEEL" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,12 +42,12 @@ group\&. If no group with this name exist, the module is using the group with th
 \fB0\fR\&.
 .SH "OPTIONS"
 .PP
-\fBdebug\fR
+debug
 .RS 4
 Print debug information\&.
 .RE
 .PP
-\fBdeny\fR
+deny
 .RS 4
 Reverse the sense of the auth operation: if the user is trying to get UID 0 access and is a member of the wheel group (or the group of the
 \fBgroup\fR
@@ -56,24 +56,24 @@ option), deny access\&. Conversely, if the user is not in the group, return PAM_
 was also specified, in which case we return PAM_SUCCESS)\&.
 .RE
 .PP
-\fBgroup=\fR\fB\fIname\fR\fR
+group=name
 .RS 4
 Instead of checking the wheel or GID 0 groups, use the
 \fB\fIname\fR\fR
 group to perform the authentication\&.
 .RE
 .PP
-\fBroot_only\fR
+root_only
 .RS 4
 The check for wheel membership is done only when the target user UID is 0\&.
 .RE
 .PP
-\fBtrust\fR
+trust
 .RS 4
 The pam_wheel module will return PAM_SUCCESS instead of PAM_IGNORE if the user is a member of the wheel group (thus with a little play stacking the modules the wheel members may be able to su to root without being prompted for a passwd)\&.
 .RE
 .PP
-\fBuse_uid\fR
+use_uid
 .RS 4
 The check will be done against the real uid of the calling process, instead of trying to obtain the user from the login session associated with the terminal in use\&.
 .RE

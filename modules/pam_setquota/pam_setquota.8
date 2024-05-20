@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pam_setquota
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/03/2021
+.\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
+.\"      Date: 05/07/2023
 .\"    Manual: Linux-PAM Manual
-.\"    Source: Linux-PAM Manual
+.\"    Source: Linux-PAM
 .\"  Language: English
 .\"
-.TH "PAM_SETQUOTA" "8" "09/03/2021" "Linux-PAM Manual" "Linux\-PAM Manual"
+.TH "PAM_SETQUOTA" "8" "05/07/2023" "Linux\-PAM" "Linux\-PAM Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,30 +40,30 @@ This makes quotas usable with central user databases, such as MySQL or LDAP\&.
 .SH "OPTIONS"
 .PP
 .PP
-\fBfs=\fR\fB\fI/home\fR\fR
+fs=/home
 .RS 4
 The device file or mountpoint the policy applies to\&. Defaults to the filesystem containing the users home directory\&.
 .RE
 .PP
-\fBoverwrite=\fR\fB\fI0\fR\fR
+overwrite=0
 .RS 4
 Overwrite an existing quota\&. Note: Enabling this will remove the ability for the admin to manually configure different quotas for users for a filesystem with
 \fBedquota\fR(8)\&. (Defaults to 0)
 .RE
 .PP
-\fBdebug=\fR\fB\fI0\fR\fR
+debug=0
 .RS 4
 Enable debugging\&. A value of 1 outputs the old and new quota on a device\&. A value of 2 also prints out the matched and found filesystems should
 \fBfs\fR
 be unset\&. (Defaults to 0)
 .RE
 .PP
-\fBstartuid=\fR\fB\fI1000\fR\fR
+startuid=1000
 .RS 4
 Describe the start of the UID range the policy is applied to\&. (Defaults to UID_MIN from login\&.defs or the uidmin value defined at compile\-time if UID_MIN is undefined\&.)
 .RE
 .PP
-\fBenduid=\fR\fB\fI0\fR\fR
+enduid=0
 .RS 4
 Describe the end of the UID range the policy is applied to\&. Setting
 \fIenduid=0\fR
@@ -72,7 +72,7 @@ results in an open\-ended UID range (i\&.e\&. all uids greater than
 are included)\&. (Defaults to 0)
 .RE
 .PP
-\fBbsoftlimit=\fR\fB\fI19000\fR\fR
+bsoftlimit=19000
 .RS 4
 Soft limit for disk quota blocks, as defined by
 \fBquotactl\fR(2)\&. Note:
@@ -83,7 +83,7 @@ and
 be set at the same time!
 .RE
 .PP
-\fBbhardlimit=\fR\fB\fI20000\fR\fR
+bhardlimit=20000
 .RS 4
 Hard limit for disk quota blocks, as defined by
 \fBquotactl\fR(2)\&. Note:
@@ -94,7 +94,7 @@ and
 be set at the same time!
 .RE
 .PP
-\fBisoftlimit=\fR\fB\fI3000\fR\fR
+isoftlimit=3000
 .RS 4
 Soft limit for inodes, as defined by
 \fB quotactl\fR(2)\&. Note:
@@ -105,7 +105,7 @@ and
 be set at the same time!
 .RE
 .PP
-\fBihardlimit=\fR\fB\fI4000\fR\fR
+ihardlimit=4000
 .RS 4
 Hard limit for inodes, as defined by
 \fB quotactl\fR(2)\&. Note:
