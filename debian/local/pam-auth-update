@@ -39,6 +39,8 @@ my $blanktemplate = 'libpam-runtime/no_profiles_chosen';
 my $titletemplate = 'libpam-runtime/title';
 my $confdir = '/etc/pam.d';
 my $savedir = '/var/lib/pam';
+my $hooksdir = '/etc/pam-auth-update/hooks';
+my $hook = Hook->new($hooksdir);
 my (%profiles, @sorted, @enabled, @conflicts, @new, %removals, %to_disable, %to_enable);
 my $force = 0;
 my $package = 0;
@@ -279,7 +281,6 @@ close(SEEN) or die("close(${savedir}/seen) failed: $!");
 #   the --force option
 
 write_profiles(\%profiles, \@enabled, $confdir, $savedir, $diff, $force);
-
 
 # take a single line from a stock config, and merge it with the
 # information about local admin edits
@@ -577,6 +578,7 @@ sub write_profiles
                     or die("rename($dest, $target) failed: $!");
 		rename("$savedir/${type}.new","$savedir/$type")
                     or die("rename(${savedir}/${type}.new, ${savedir}/${type}) failed: $!");
+        $hook->invoke($target);
 	}
 
 	# at the end of a successful write, reset the 'seen' flag and the
@@ -743,4 +745,52 @@ sub parse_pam_profile
 			$profile{'Session-noninteractive-Initial'} = $profile{'Session-Initial'};
 	}
 	return %profile;
+}
+
+package Hook {
+    sub new {
+        my $class = shift;
+        my $self = {
+            hook_dir => shift,
+        };
+        return bless $self, $class;
+    }
+
+    sub invoke {
+        my ($self, $sourcepath) = @_;
+        my $hook_dir = $self->{hook_dir};
+
+        # 打开目录
+        opendir(my $dh, $hook_dir) or do {
+            print "Could not open directory $hook_dir: $!\n";
+            return;
+        };
+
+        my @scripts;
+        # 读取目录中的文件
+        while (my $file = readdir($dh)) {
+	     	if ($file =~ /^(\d+)_.*$/) {
+     	       		push @scripts, { num => $1, file => "$hook_dir/$file" };
+     		}
+        }
+        closedir($dh);
+
+        # 按数字排序
+        @scripts = sort { $a->{num} <=> $b->{num} } @scripts;
+
+        # 依次执行脚本
+        for my $script (@scripts) {
+            my $script_path = $script->{file};
+            if (-e $script_path) {
+                my $invoke_code = do $script_path;
+                if (ref $invoke_code eq 'CODE') {
+                    $invoke_code->($sourcepath);
+                } else {
+                    print "Script $script_path did not return a valid code reference.\n";
+                }
+            } else {
+                print "Script file $script_path not found\n";
+            }
+        }
+    }
 }
