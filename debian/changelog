@@ -1,9 +1,10 @@
 pam (1.5.3-8) unstable; urgency=medium
 
+  * Fix cp file failure issue
   * Add hook support when pam-auth-update is called.
 
- -- luxinyou <luxinyou@uniontech.com>  Mon, 14 Apr 2025 16:25:07 -0600
- 
+ -- Chengqi E <echengqi@uniontech.com>  Sat, 08 Mar 2025 13:49:35 +0800
+
 pam (1.5.3-7) unstable; urgency=medium
 
   * Correct Build depends for docbook5, Closes: #1065064
