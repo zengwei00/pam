@@ -1,3 +1,9 @@
+pam (1.5.3-9) unstable; urgency=medium
+
+  * pam-auth-update hook机制加固，避免钩子脚本错误导致的安装libpam-runtime安装失败.
+
+ -- luxinyou <luxinyou@uniontech.com>  Mon, 21 Apr 2025 21:25:07 -0600
+
 pam (1.5.3-8) unstable; urgency=medium
 
   * Add hook support when pam-auth-update is called.

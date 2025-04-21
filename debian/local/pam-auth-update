@@ -572,13 +572,18 @@ sub write_profiles
 		# perl-modules, not perl-base
 		if (-e $target && $force) {
 			system('cp','-f',$target,$target . '.pam-old') == 0
-                            or die("cp -f ${target} ${target}.pam.old failed");
+					or die("cp -f ${target} ${target}.pam.old failed");
 		}
 		rename($dest,$target)
-                    or die("rename($dest, $target) failed: $!");
+					or die("rename($dest, $target) failed: $!");
 		rename("$savedir/${type}.new","$savedir/$type")
-                    or die("rename(${savedir}/${type}.new, ${savedir}/${type}) failed: $!");
-        $hook->invoke($target);
+					or die("rename(${savedir}/${type}.new, ${savedir}/${type}) failed: $!");
+		eval {
+			$hook->invoke($target);
+		};
+		if ($@) {
+			print "Error occured during hook script invocation:$@\n";
+		}
 	}
 
 	# at the end of a successful write, reset the 'seen' flag and the
@@ -748,49 +753,53 @@ sub parse_pam_profile
 }
 
 package Hook {
-    sub new {
-        my $class = shift;
-        my $self = {
-            hook_dir => shift,
-        };
-        return bless $self, $class;
-    }
+	sub new {
+		my $class = shift;
+		my $self = {
+			hook_dir => shift,
+		};
+		return bless $self, $class;
+	}
 
-    sub invoke {
-        my ($self, $sourcepath) = @_;
-        my $hook_dir = $self->{hook_dir};
+	sub invoke {
+		my ($self, $sourcepath) = @_;
+		my $hook_dir = $self->{hook_dir};
 
-        # 打开目录
-        opendir(my $dh, $hook_dir) or do {
-            print "Could not open directory $hook_dir: $!\n";
-            return;
-        };
+		 # 打开目录
+		opendir(my $dh, $hook_dir) or do {
+			print "Could not open directory $hook_dir: $!\n";
+			return;
+		};
 
-        my @scripts;
-        # 读取目录中的文件
-        while (my $file = readdir($dh)) {
-	     	if ($file =~ /^(\d+)_.*$/) {
-     	       		push @scripts, { num => $1, file => "$hook_dir/$file" };
-     		}
-        }
-        closedir($dh);
+		my @scripts;
+		 # 读取目录中的文件
+		 while (my $file = readdir($dh)) {
+			if ($file =~ /^(\d+)_.*$/) {
+				push @scripts, { num => $1, file => "$hook_dir/$file" };
+	 		}
+		}
+		closedir($dh);
+		if (@scripts == 0) {
+			print "No scripts to process. returning early...\n";
+			return;
+		}
 
-        # 按数字排序
-        @scripts = sort { $a->{num} <=> $b->{num} } @scripts;
+		 # 按数字排序
+		@scripts = sort { $a->{num} <=> $b->{num} } @scripts;
 
-        # 依次执行脚本
-        for my $script (@scripts) {
-            my $script_path = $script->{file};
-            if (-e $script_path) {
-                my $invoke_code = do $script_path;
-                if (ref $invoke_code eq 'CODE') {
-                    $invoke_code->($sourcepath);
-                } else {
-                    print "Script $script_path did not return a valid code reference.\n";
-                }
-            } else {
-                print "Script file $script_path not found\n";
-            }
-        }
+		# 依次执行脚本
+		for my $script (@scripts) {
+			my $script_path = $script->{file};
+			if (-e $script_path) {
+			 	my $invoke_code = do $script_path;
+				if (ref $invoke_code eq 'CODE') {
+					$invoke_code->($sourcepath);
+				} else {
+					print "Script $script_path did not return a valid code reference.\n";
+				}
+			} else {
+				print "Script file $script_path not found\n";
+			}
+		}
     }
 }
