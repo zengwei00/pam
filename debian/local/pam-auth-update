@@ -27,6 +27,7 @@
 use strict;
 use Debconf::Client::ConfModule ':all';
 use IPC::Open2 'open2';
+use File::Temp qw/tempfile/;
 
 version('2.0');
 my $capb=capb('backup escape');
@@ -762,7 +763,14 @@ package Hook {
 	}
 
 	sub invoke {
-		my ($self, $sourcepath) = @_;
+        my ($self, $sourcepath) = @_;
+		my ($tmp_fh, $tmp_file) = File::Temp::tempfile();
+		open my $in, '<', $sourcepath or die "Could not open file: $!";
+		while (<$in>) {
+			next if (/^auth\s+requisite\s+deepin_security_verify\.so\s*/);
+			print $tmp_fh;
+		}
+
 		my $hook_dir = $self->{hook_dir};
 
 		 # 打开目录
@@ -773,7 +781,7 @@ package Hook {
 
 		my @scripts;
 		 # 读取目录中的文件
-		 while (my $file = readdir($dh)) {
+		while (my $file = readdir($dh)) {
 			if ($file =~ /^(\d+)_.*$/) {
 				push @scripts, { num => $1, file => "$hook_dir/$file" };
 	 		}
@@ -793,7 +801,7 @@ package Hook {
 			if (-e $script_path) {
 			 	my $invoke_code = do $script_path;
 				if (ref $invoke_code eq 'CODE') {
-					$invoke_code->($sourcepath);
+					$invoke_code->($tmp_file);
 				} else {
 					print STDERR "Script $script_path did not return a valid code reference.\n";
 				}
@@ -801,5 +809,6 @@ package Hook {
 				print STDERR "Script file $script_path not found\n";
 			}
 		}
+		close($tmp_fh);
     }
 }

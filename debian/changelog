@@ -1,3 +1,9 @@
+pam (1.5.3-9deepin2) unstable; urgency=medium
+
+  * removed deepin_security_verify pam module if invoke hook scripts.
+
+ -- luxinyou <luxinyou@uniontech.com> Fri, 23 May 2025 13:53:07 -0600
+
 pam (1.5.3-9deepin1) unstable; urgency=medium
 
   * bugfix: pam-auth-update hook 脚本输出错误日志到终端, 避免污染debconf交互.
