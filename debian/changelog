@@ -1,3 +1,9 @@
+pam (1.5.3-9deepin1) unstable; urgency=medium
+
+  * bugfix: pam-auth-update hook 脚本输出错误日志到终端, 避免污染debconf交互.
+
+ -- luxinyou <luxinyou@uniontech.com> Fri, 25 Apr 2025 10:58:07 -0600
+
 pam (1.5.3-9) unstable; urgency=medium
 
   * pam-auth-update hook机制加固，避免钩子脚本错误导致的安装libpam-runtime安装失败.

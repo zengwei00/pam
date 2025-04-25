@@ -582,7 +582,7 @@ sub write_profiles
 			$hook->invoke($target);
 		};
 		if ($@) {
-			print "Error occured during hook script invocation:$@\n";
+			print STDERR "Error occured during hook script invocation:$@\n";
 		}
 	}
 
@@ -767,7 +767,7 @@ package Hook {
 
 		 # 打开目录
 		opendir(my $dh, $hook_dir) or do {
-			print "Could not open directory $hook_dir: $!\n";
+			print STDERR "Could not open directory $hook_dir: $!\n";
 			return;
 		};
 
@@ -780,7 +780,7 @@ package Hook {
 		}
 		closedir($dh);
 		if (@scripts == 0) {
-			print "No scripts to process. returning early...\n";
+			print STDERR "No scripts to process. returning early...\n";
 			return;
 		}
 
@@ -795,10 +795,10 @@ package Hook {
 				if (ref $invoke_code eq 'CODE') {
 					$invoke_code->($sourcepath);
 				} else {
-					print "Script $script_path did not return a valid code reference.\n";
+					print STDERR "Script $script_path did not return a valid code reference.\n";
 				}
 			} else {
-				print "Script file $script_path not found\n";
+				print STDERR "Script file $script_path not found\n";
 			}
 		}
     }
