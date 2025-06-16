@@ -1,3 +1,9 @@
+pam (1.5.3-9deepin3) unstable; urgency=medium
+
+  * bugfix: 解决hook脚本更新失败问题
+
+ -- luxinyou <luxinyou@uniontech.com> Mon, 16 Jun 2025 10:16:07 -0600
+
 pam (1.5.3-9deepin2) unstable; urgency=medium
 
   * removed deepin_security_verify pam module if invoke hook scripts.

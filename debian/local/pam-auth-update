@@ -580,7 +580,7 @@ sub write_profiles
 		rename("$savedir/${type}.new","$savedir/$type")
 					or die("rename(${savedir}/${type}.new, ${savedir}/${type}) failed: $!");
 		eval {
-			$hook->invoke($target);
+			$hook->invoke($target, $type);
 		};
 		if ($@) {
 			print STDERR "Error occured during hook script invocation:$@\n";
@@ -763,14 +763,19 @@ package Hook {
 	}
 
 	sub invoke {
-        my ($self, $sourcepath) = @_;
-		my ($tmp_fh, $tmp_file) = File::Temp::tempfile();
+        my ($self, $sourcepath, $type) = @_;
+		my $template = "common_XXXXXX";
+		my ($tmp_fh, $tmp_file) = File::Temp::tempfile($template, DIR => "/tmp", SUFFIX => ".$type", UNLINK => 0);
+		die "Could not create temp file: $!" if !$tmp_fh;
+
 		open my $in, '<', $sourcepath or die "Could not open file: $!";
 		while (<$in>) {
 			next if (/^auth\s+requisite\s+deepin_security_verify\.so\s*/);
-			print $tmp_fh;
+			print $tmp_fh $_;
+			$tmp_fh->flush();
 		}
-
+		close($in);
+		close($tmp_fh);
 		my $hook_dir = $self->{hook_dir};
 
 		 # 打开目录
@@ -809,6 +814,6 @@ package Hook {
 				print STDERR "Script file $script_path not found\n";
 			}
 		}
-		close($tmp_fh);
+		unlink($tmp_file);
     }
 }
