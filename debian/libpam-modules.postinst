@@ -16,4 +16,9 @@ then
 	touch "$DPKG_ROOT"/etc/environment
 fi
 
+if dpkg --compare-versions "$2" le 1.5.3-9deepin3
+then
+    pam-auth-update --package
+fi
+
 #DEBHELPER#
