@@ -21,3 +21,4 @@ nullok_secure-compat.patch
 pam_mkhomedir_stat_before_opendir
 pam_namespace_o_directory
 ftbfs-implicit-function-declaration
+010_uos-pam_limits-use-systemd-logind

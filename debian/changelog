@@ -1,3 +1,9 @@
+pam (1.5.3-9deepin5) unstable; urgency=medium
+
+  * pam_limits: use systemd-logind instead of utmp 
+
+ -- luojiahao <luojiahao@uniontech.com> Thu, 03 Jul 2025 14:00:13 -0600
+
 pam (1.5.3-9deepin4) unstable; urgency=medium
 
   * bugfix: 解决域用户登录时,  创建家目录时umask设置错误问题
