@@ -22,3 +22,5 @@ pam_mkhomedir_stat_before_opendir
 pam_namespace_o_directory
 ftbfs-implicit-function-declaration
 010_uos-pam_limits-use-systemd-logind
+0001-CVE-2024-10963.patch
+0001-CVE-2024-10041.patch

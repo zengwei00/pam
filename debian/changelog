@@ -1,3 +1,9 @@
+pam (1.5.3-9deepin6) unstable; urgency=medium
+
+  * fix CVE-2024-10963 CVE-2024-10041 
+
+ -- zengwei <zengwei1@uniontech.com>  Fri, 31 Oct 2025 10:05:37 +0800
+
 pam (1.5.3-9deepin5) unstable; urgency=medium
 
   * pam_limits: use systemd-logind instead of utmp 
